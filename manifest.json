@@ -10,7 +10,7 @@
         "js/extension.js"
       ]
     }
-  ],  
+  ],
   "gateway_specific_settings": {
     "webthings": {
       "exec": "python3 {path}/main.py",
@@ -73,7 +73,7 @@
     }
   },
   "short_name": "Energy",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
