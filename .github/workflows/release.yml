@@ -75,7 +75,7 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.version }}
-    name: Set permissions
+    - name: Set permissions
       run: chmod +x ./build.sh
     - name: Build adapter
       run: |
