@@ -81,7 +81,7 @@ class EnergyUseAdapter(Adapter):
         self.addon_start_time = datetime.datetime.now() 
         self.previous_hour = self.addon_start_time.hour # used to remember the current hour
        
-        
+        self.test_counter = 0
         
         self.previous_hour_day_delta = None # used to remember what the day_delta value was an hour ago, in order to figure out how much was used in the last hour.. 
         self.previous_hour_total = None # used to remember the total Kwh the devices are reporting. This is not per-day data.
@@ -242,7 +242,6 @@ class EnergyUseAdapter(Adapter):
                 current_time = datetime.datetime.now() 
     
     
-    
                 if not 'last_day' in self.persistent_data:
                     self.persistent_data['last_day'] = current_time.day
                     self.save_persistent_data()
@@ -252,7 +251,7 @@ class EnergyUseAdapter(Adapter):
                     if self.DEBUG:
                         print('previous day in persistent data: ' + str(self.persistent_data['last_day']))
  
-                 if self.DEBUG:
+                if self.DEBUG:
                     print ("today is: " + str(current_time.day))
                 
                 
@@ -261,6 +260,8 @@ class EnergyUseAdapter(Adapter):
                 #
                 # A new day
                 #
+                
+                test = True
                 
                 if current_time.day != self.persistent_data['last_day']:
                     self.test_counter = 0
@@ -289,7 +290,7 @@ class EnergyUseAdapter(Adapter):
                         
                     self.save_persistent_data()
                     
-                elif current_time.hour != self.previous_hour: # or self.test_counter < 6:
+                elif current_time.hour != self.previous_hour or test == True: # or self.test_counter < 6:
                     if self.DEBUG:
                         print("IT'S A NEW HOUR")
                     # get fresh things data
@@ -311,6 +312,8 @@ class EnergyUseAdapter(Adapter):
                     
                 time.sleep(60)
                 self.test_counter += 1
+                if self.test_counter > 3:
+                    self.test_counter = 0
                 #
                 # Now that we're sure we're in the next day, go to sleep again.
                 #
