@@ -27,7 +27,7 @@
   "options": {
     "default": {
       "Device detail days": 28,
-	  "Data retention months": 24,
+      "Data retention months": 24,
       "Authorization token": "",
       "Debugging": false
     },
@@ -40,9 +40,9 @@
               "1",
               "3",
               "7",
-			  "14",
+              "14",
               "28",
-			  "56",
+              "56",
               "84"
           ],
           "type": "string"
@@ -53,9 +53,9 @@
               "1",
               "3",
               "6",
-			  "12",
+              "12",
               "24",
-			  "36"
+              "36"
           ],
           "type": "string"
         },
@@ -73,12 +73,12 @@
     }
   },
   "short_name": "Energy",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
-	"images/*.png",
-	"images/*.gif",
+    "images/*.png",
+    "images/*.gif",
     "js/*.js",
     "views/*.html"
   ]
