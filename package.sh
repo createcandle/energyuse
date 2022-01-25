@@ -20,7 +20,7 @@ fi
 mkdir package
 
 # Put package together
-cp -r pkg LICENSE manifest.json *.py README.md package/
+cp -r pkg LICENSE manifest.json *.py js images views css README.md package/
 find package -type f -name '*.pyc' -delete
 find package -type f -name '._*' -delete
 find package -type d -empty -delete

@@ -110,8 +110,8 @@ class EnergyUseAdapter(Adapter):
                     
                 
                 
-        except:
-            print("Could not load persistent data (if you just installed the add-on then this is normal)")
+        except Exception as ex:
+            print("ERROR: Could not load persistent data (if you just installed the add-on then this is normal): " + str(ex))
             self.persistent_data = {'energy':{}, 'api_server':'http://127.0.0.1:8080','token':None, 'device_detail_days':14, 'data_retention_months':24}
 
 
@@ -150,7 +150,7 @@ class EnergyUseAdapter(Adapter):
         except Exception as ex:
             print("Could not create energyuse_device: " + str(ex))
         
-
+        #time.sleep(2)
 
         # Start the internal clock
         if self.DEBUG:
@@ -188,6 +188,7 @@ class EnergyUseAdapter(Adapter):
             self.close_proxy()
             return
 
+
         # Api token
         try:
             if 'Authorization token' in config:
@@ -195,16 +196,22 @@ class EnergyUseAdapter(Adapter):
                     self.persistent_data['token'] = str(config['Authorization token'])
                     if self.DEBUG:
                         print("-Authorization token was present in the config data.")
+        except Exception as ex:
+            print("Error loading authorization key from settings: " + str(ex))
         
+        
+        try:
             if 'Device detail days' in config:
                 self.persistent_data['device_detail_days'] = int(config['Device detail days'])
+        except Exception as ex:
+            print("Error loading device detail days from settings: " + str(ex))
         
+        
+        try:
             if 'Data retention months' in config:
                 self.persistent_data['data_retention_months'] = int(config['Data retention months'])
-                self.data_retention_months
-        
-        except:
-            print("Error loading data from settings")
+        except Exception as ex:
+            print("Error loading data retention from settings: " + str(ex))
 
 
         if 'Debugging' in config:
@@ -230,8 +237,8 @@ class EnergyUseAdapter(Adapter):
         """ Runs every second and handles the various timers """
         
         if self.DEBUG:
-            print("CLOCK INIT.. Will sleep seconds: ")
-            
+            print("CLOCK INIT.. ")
+        time.sleep(2)
         #time.sleep(initial_sleep)
             
         clock_active = True
@@ -246,7 +253,7 @@ class EnergyUseAdapter(Adapter):
                     self.persistent_data['last_day'] = current_time.day
                     self.save_persistent_data()
                     if self.DEBUG:
-                        print('previous day  was not in persistent data yet. Added it now.')
+                        print('last_day  was not in persistent data yet. Added it now: ' + str(self.persistent_data['last_day']))
                 else:
                     if self.DEBUG:
                         print('previous day in persistent data: ' + str(self.persistent_data['last_day']))
@@ -263,7 +270,7 @@ class EnergyUseAdapter(Adapter):
                 
                 test = True
                 
-                if current_time.day != self.persistent_data['last_day']:
+                if current_time.day != self.persistent_data['last_day']: # or self.test_counter == 3:
                     self.test_counter = 0
                     if self.DEBUG:
                         print("IT'S A NEW DAY!")
@@ -272,7 +279,7 @@ class EnergyUseAdapter(Adapter):
                         # get fresh things data
                         self.got_fresh_things_list = False
                         for x in range(6):
-                            p#rint("in for loop to get fresh things")
+                            #print("in for loop to get fresh things")
                             self.update_simple_things()
                             if self.got_fresh_things_list:
                                 if self.DEBUG:
@@ -290,7 +297,7 @@ class EnergyUseAdapter(Adapter):
                         
                     self.save_persistent_data()
                     
-                elif current_time.hour != self.previous_hour or test == True: # or self.test_counter < 6:
+                elif current_time.hour != self.previous_hour: # or test == True: # or self.test_counter < 3:
                     if self.DEBUG:
                         print("IT'S A NEW HOUR")
                     # get fresh things data
@@ -306,9 +313,10 @@ class EnergyUseAdapter(Adapter):
                             time.sleep(10)
                     
                     if self.got_fresh_things_list:
-                        self.previous_hour = current_time.hour
+                        
                         #print("not a new day, but a new hour")
                         self.get_energy_data(False) # only updates the 'energy use so far today'
+                        self.previous_hour = current_time.hour
                     
                 time.sleep(60)
                 self.test_counter += 1
@@ -360,9 +368,16 @@ class EnergyUseAdapter(Adapter):
                         #print("thing = "  + str(thing))
                         #print("thing_id = "  + str(thing_id))
                         #new_simple_things[thing_id] = []
-                        #print("thing['properties']: " + str(thing['properties']))
+                        if self.DEBUG:
+                            print("thing['properties']: " + str(thing['properties']))
                         if 'properties' in thing:
+                            if self.DEBUG:
+                                print("properties was in thing")
                             if 'energy' in thing['properties']:
+                                
+                                if self.DEBUG:
+                                    print("energy was in thing properties")
+                                
                                 try:
                                     if self.DEBUG:
                                         print(" ")
@@ -373,27 +388,32 @@ class EnergyUseAdapter(Adapter):
                                         print("energy property: ", thing['properties'][thing_property_key])
                                     # check if unit is Kwh
                                 
-
+                                    print("dreadfull " + str(thing['properties'][thing_property_key]))
                                     
                                     if store_data:
                                         if not 'energy' in self.persistent_data:
+                                            print("energy was not in persistent data yet somehow")
                                             self.persistent_data['energy'] = {}
                                             
                                         if not self.current_time in self.persistent_data['energy']:
+                                            print("adding time to energy")
                                             self.persistent_data['energy'][self.current_time] = {}
                                     
 
                                 
                                     property_href = ""
                                     try:
+                                        print("links arrray: " + str(thing['properties'][thing_property_key]['links']))
                                         if len(thing['properties'][thing_property_key]['links']) > 0:
-                                            #print("links")
+                                            print("links")
                                             property_href = thing['properties'][thing_property_key]['links'][0]['href']
                                         elif len(thing['properties'][thing_property_key]['forms']) > 0:
-                                            #print("forms")
+                                            print("forms")
                                             property_href = thing['properties'][thing_property_key]['forms'][0]['href']
                                         else:
+                                            print("neither links nor forms was useful")
                                             continue
+											
                                     except Exception as ex:
                                         print("Error getting href: " + str(ex))
                                 
@@ -424,12 +444,15 @@ class EnergyUseAdapter(Adapter):
                                                     
                                                 try:
                                                     test = int(value)
+                                                    if self.DEBUG:
+                                                        print('api result was a number')
                                                 except:
                                                     if self.DEBUG:
                                                         print('value was not a number, skipping device')
                                                     continue
                                                     
                                                 kwh_total += value
+                                                print("---------- > > kwh_total is now: " + str(kwh_total))
                                                     
                                                 if store_data:
                                                     # We only store the new values at the end of the day
@@ -438,11 +461,14 @@ class EnergyUseAdapter(Adapter):
                                                 #self.save_persistent_data()
                                                 try:
                                                     if 'previous_time' in self.persistent_data:
-                                                        #print('previous time spotted')
+                                                        print('previous time spotted')
                                                         previous_time = str(self.persistent_data['previous_time'])
                                                         if self.DEBUG:
                                                             print("previous_time (that data was stored) was in persistent data: " + str(previous_time))
                                                         #print("self.persistent_data['energy'][previous_time]: " + str(self.persistent_data['energy'][str(previous_time)]))
+                                                    
+                                                        print("self.persistent_data['energy'] = " + str(self.persistent_data['energy']))
+                                                        print("self.persistent_data['energy'][previous_time] = " + str(self.persistent_data['energy'][previous_time]))
                                                     
                                                         if thing_id in self.persistent_data['energy'][previous_time]:
                                                             if self.DEBUG:
@@ -450,12 +476,20 @@ class EnergyUseAdapter(Adapter):
                                                             previous_value = self.persistent_data['energy'][previous_time][thing_id]
                                                             if self.DEBUG:
                                                                 print("previous " + str(property_id) + " value was: " + str(previous_value))
+                                                                print("TYPES. value " + str(value) + ", previous_value was: " + str(previous_value))
+                                                                print("TYPES. value " + str(type(value)) + ", previous_value was: " + str(type(previous_value)))
+                                                                
                     
                                                             if value > previous_value:
+                                                                print("new value was bigger than old value")
                                                                 device_delta = value - previous_value
                                                                 if self.DEBUG:
                                                                     print("since midnight this device has used: " + str(device_delta))
                                                                 day_delta = day_delta + device_delta
+                                                                print("day_delta  is now: " + str(day_delta ))
+                                                            else:
+                                                                if self.DEBUG:
+                                                                    print("Device had same as (or lower value than) before.")
                                                         else:
                                                             if self.DEBUG:
                                                                 print("there was data for yesterday, but this device was not present in it: " + str(thing_id))
@@ -512,8 +546,10 @@ class EnergyUseAdapter(Adapter):
                 print("storing previous_hour_total for quick hourly insight")
                 self.previous_hour_total = kwh_total
             else:
-                hourly_delta_from_total = kwh_total - self.previous_hour_total
-                self.set_value_on_thing('lasthour',hourly_delta_from_total)
+                if kwh_total >= self.previous_hour_total:
+                    hourly_delta_from_total = kwh_total - self.previous_hour_total
+                    self.set_value_on_thing('lasthour',hourly_delta_from_total)
+                    self.previous_hour_total = kwh_total
                 
             
             
