@@ -77,10 +77,16 @@ class EnergyUseAdapter(Adapter):
         self.running = True
         self.things = None
         self.got_fresh_things_list = False
-        self.previous_hour = 0 # used to remember the current hour
-        self.previous_hour_day_delta = None # used to remember what the day_delta value was an hour ago, in order to figure out how much was used in the last hour.. 
         
+        self.addon_start_time = datetime.datetime.now() 
+        self.previous_hour = self.addon_start_time.hour # used to remember the current hour
+       
+        
+        
+        self.previous_hour_day_delta = None # used to remember what the day_delta value was an hour ago, in order to figure out how much was used in the last hour.. 
+        self.previous_hour_total = None # used to remember the total Kwh the devices are reporting. This is not per-day data.
         self.test_counter = 0
+        
         
 
         # Get persistent data
@@ -241,10 +247,10 @@ class EnergyUseAdapter(Adapter):
                     self.persistent_data['last_day'] = current_time.day
                     self.save_persistent_data()
                     if self.DEBUG:
-                        print('previous day was not in persistent data yet. Added it now.')
+                        print('previous day  was not in persistent data yet. Added it now.')
                 else:
                     if self.DEBUG:
-                        print('previous day was: ' + str(self.persistent_data['last_day']))
+                        print('previous day in persistent data: ' + str(self.persistent_data['last_day']))
                 # Printing attributes of now(). 
                 #print ("The attributes of now() are : ") 
     
@@ -363,7 +369,7 @@ class EnergyUseAdapter(Adapter):
                         #print("thing = "  + str(thing))
                         #print("thing_id = "  + str(thing_id))
                         #new_simple_things[thing_id] = []
-                        #print("thing['properties']: " + str(thing['properties']))
+                        print("thing['properties']: " + str(thing['properties']))
                         if 'properties' in thing:
                             if 'energy' in thing['properties']:
                                 try:
@@ -390,10 +396,10 @@ class EnergyUseAdapter(Adapter):
                                     property_href = ""
                                     try:
                                         if len(thing['properties'][thing_property_key]['links']) > 0:
-                                            #print("links")
+                                            print("links")
                                             property_href = thing['properties'][thing_property_key]['links'][0]['href']
                                         elif len(thing['properties'][thing_property_key]['forms']) > 0:
-                                            #print("forms")
+                                            print("forms")
                                             property_href = thing['properties'][thing_property_key]['forms'][0]['href']
                                         else:
                                             continue
@@ -441,7 +447,7 @@ class EnergyUseAdapter(Adapter):
                                                 #self.save_persistent_data()
                                                 try:
                                                     if 'previous_time' in self.persistent_data:
-                                                        #print('previous time spotted')
+                                                        print('previous time spotted')
                                                         previous_time = str(self.persistent_data['previous_time'])
                                                         if self.DEBUG:
                                                             print("previous_time (that data was stored) was in persistent data: " + str(previous_time))
@@ -469,31 +475,20 @@ class EnergyUseAdapter(Adapter):
                                 except Exception as ex:
                                     print("Error while looping over energy property: " + str(ex))                        
             
-                                            
-                                                        
-                                    
-                                
-                            #for thing_property_key in thing['properties']:
-                                #print("-thing_property_key = " + str(thing_property_key))
-                            #    property_id = thing['properties'][thing_property_key]['links'][0]['href'].rsplit('/', 1)[-1]
-                                #print("property_id = " + str(property_id))
-                                #new_simple_things[thing_id].append(thing_property_key)
-                
-            #self.persistent_data['energy'] = new_simple_things
-
+                                       
             if self.DEBUG:
                 print(" ")
                 print("looped over all things. day_delta: " + str(day_delta))
 
+
+            # 
+            #  Yesterday, set at mignight
+            #
             
-
-            if self.DEBUG:
-                print("updating thing properties")
-
             if store_data:
                 #if not 'previous_time' in self.persistent_data:
                 if self.DEBUG:
-                    print("doing daily update. Saving previous_time and previous_delta to persistent data")
+                    print("doing yesterday update. Saving 'previous_time' and day_delta to persistent data")
                 self.persistent_data['previous_time'] = self.current_time
                 #self.persistent_data['previous_delta'] = round(day_delta, 5)
                 
@@ -501,16 +496,48 @@ class EnergyUseAdapter(Adapter):
                 #self.persistent_data['energy'][self.current_time]['day_delta'] = round(day_delta, 4)
                 
                 self.set_value_on_thing('yesterday', round(day_delta, 4))
-                self.set_value_on_thing('today', 0)
+                
+                self.set_value_on_thing('today', 0) # reset today value to 0
+            
+            
+            
+            #
+            # Today - updates through the day
+            #
+            
+            elif day_delta > 0:
+                self.set_value_on_thing('today', round(day_delta, 4)) # set today value to the differnce from what it was at midnight
                 
             
+            
+                
+            #
+            # Hourly update
+            #
+            
             if self.DEBUG:
-                print("doing hourly update")
-            if day_delta > 0:
+                print("total-ever reported energy use by monitoring devices: " + str(kwh_total) )
+            if self.previous_hour_total == None:
+                print("storing previous_hour_total for quick hourly insight")
+                self.previous_hour_total = kwh_total
+            else:
+                hourly_delta_from_total = kwh_total - self.previous_hour_total
+                self.set_value_on_thing('lasthour',hourly_delta_from_total)
+                
+            
+            
+            
+            #if day_delta > 0:
+                """
                 if self.DEBUG:
                     print("updating today delta on thing to: " + str(round(day_delta, 4)))
-                if not store_data:
+                
+                # At mignight set the value of today to 0. Otherwise set it to the difference with the value from midnight (day_delta)
+                if store_data:
+                    self.set_value_on_thing('today', 0)
+                else:
                     self.set_value_on_thing('today', round(day_delta, 4))
+                
                 
                 if self.previous_hour_day_delta == None:
                     if self.DEBUG:
@@ -531,12 +558,12 @@ class EnergyUseAdapter(Adapter):
                           
                     if store_data:
                         self.previous_hour_day_delta = 0 # at midnight we calculate the last hourly delta (above), and then reset, so that at 1am it will use 0 as the previous value
-                    
+                """    
                             
                 
-            else:
-                if self.DEBUG:
-                    print("today delta was 0?")
+            #else:
+            #    if self.DEBUG:
+            #        print("today delta was 0?")
 
             
         
