@@ -170,12 +170,13 @@
 
 .extension-energyuse-item-stack > div{
     margin:.2rem;
-    background-color:rgba(0,0,0,.1);
+    /*border-bottom:rgba(255,255,255,.2);*/
 }
 
 .extension-energyuse-item-stack-device{
     display:flex;
     justify-content:right;
+    border-bottom:1px solid rgba(255,255,255,.2);
 }
 
 .extension-energyuse-item-stack-device a{
@@ -226,22 +227,22 @@
     background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.2));
     background-size: 400% 400%;
 
-    -webkit-animation: AnimationName 5s ease infinite;
-    -moz-animation: AnimationName 5s ease infinite;
-    animation: AnimationName 5s ease infinite;
+    -webkit-animation: pulsate 5s ease infinite;
+    -moz-animation: pulsate 5s ease infinite;
+    animation: pulsate 5s ease infinite;
 }
 
-@-webkit-keyframes AnimationName {
+@-webkit-keyframes pulsate {
     0%{background-position:49% 0%}
     50%{background-position:52% 100%}
     100%{background-position:49% 0%}
 }
-@-moz-keyframes AnimationName {
+@-moz-keyframes pulsate {
     0%{background-position:49% 0%}
     50%{background-position:52% 100%}
     100%{background-position:49% 0%}
 }
-@keyframes AnimationName {
+@keyframes pulsate {
     0%{background-position:49% 0%}
     50%{background-position:52% 100%}
     100%{background-position:49% 0%}
@@ -267,6 +268,51 @@
     content:'Week total: ';
     opacity:.3;
 }
+
+
+
+
+
+
+
+/*  GRAND TOTAL  */
+
+#extension-energyuse-totals{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-evenly;
+    margin: 4rem 0;
+}
+#extension-energyuse-totals > div{
+    display:flex;
+    flex-direction:column;
+    /*justify-content:center;*/
+    align-items:center;
+}
+
+.extension-energyuse-big-number-container{
+    width:14rem;
+    height:14rem;
+    margin:1rem;
+    background-color:rgba(0,0,0,.1);
+    border-radius:50%;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+}
+
+.extension-energyuse-big-number{
+    font-size:3.6rem;
+    font-weight:bold;
+}
+
+.extension-energyuse-big-number-title{
+    opacity:.5;
+}
+
+
+
 /*
 .extension-energyuse-item + .extension-energyuse-week-total{
     background-color:transparent;

@@ -93,7 +93,7 @@ class EnergyUseAPIHandler(APIHandler):
                             print("in init")
                         
                         self.adapter.prune_data()
-                        
+                        print(str(self.adapter.persistent_data))
                         return APIResponse(
                           status=200,
                           content_type='application/json',

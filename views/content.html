@@ -5,12 +5,24 @@
 
         <div id="extension-energyuse-tabs-container">
 
+            <!--
             <div id="extension-energyuse-search-page" style="display:none">
                 <button id="extension-energyuse-back-button" class="back-button icon-button" data-l10n-id="back-button" aria-label="Back"></button>
             </div>
-            
+            -->
             
             <div id="extension-energyuse-main-page">
+                
+                <div id="extension-energyuse-totals">
+                    <div id="extension-energyuse-grand-total-container">
+                        <div class="extension-energyuse-big-number-container">
+                            <span id="extension-energyuse-grand-total" class="extension-energyuse-big-number">...</span>
+                            <span class="extension-energyuse-big-unit">KWh</span>
+                        </div>
+                        <span class="extension-energyuse-big-number-title" title="This is the total reported by your devices since they started monitoring.">Grand total</span>
+                    </div>
+                    
+                </div>
                 
                 <div id="extension-energyuse-list">
                     <div id="extension-energyuse-loading">
@@ -18,6 +30,7 @@
                             <div></div><div></div><div></div><div></div>
                         </div>
                     </div>
+                    <p style="text-align:center">If you just installed this addon: values will be calculated at midnight.</p>
                 </div>
                 <!--
                 <button id="extension-energyuse-add-button" class="icon-button" aria-label="New"></button>

@@ -99,7 +99,7 @@
             
             this.interval = setInterval(() =>{
                 this.start();
-            },60000); // 600000 = update the display every 10 minutes
+            },1200000); // 1200000 = update the display every 20 minutes
             
             this.start();
 		}   
@@ -178,6 +178,14 @@
                         }
                     }
                     
+                    if(typeof this.persistent_data.grand_total != 'undefined'){
+                        //document.getElementById('extension-energyuse-totals').style.display = 'block';
+                        if(this.persistent_data.grand_total != 0){
+                            document.getElementById('extension-energyuse-grand-total').innerText = this.persistent_data.grand_total;
+                        }
+                    }
+                    
+                    
                     ///this.start(); // gets things data, and then regenerates the info
 					
 				
@@ -248,6 +256,7 @@
                 var week_container = document.createElement('div')
                 week_container.setAttribute("class", "extension-energyuse-week-container");
 				
+                var day_total = 0;
                 var week_total_kwh = 0;
                 var previous_device_count = null;
                 var device_count = 0; // if any new devices show up during the week, this will change
@@ -320,7 +329,7 @@
                         if(ready_clone != null && this.only_show_week_total == false){
                             week_container.append(ready_clone)
                         }
-                        
+                        week_total_kwh = week_total_kwh + day_total;
                         
                         
                         if(first_week_day){
@@ -354,7 +363,7 @@
                     
                     const day = items[timestamp];
                     
-                    var day_total = 0;
+                    day_total = 0;
                     device_count = 0;
                     
                     for (const device_id in day) {
@@ -410,7 +419,7 @@
                     }
                     
                     clone.getElementsByClassName("extension-energyuse-item-total")[0].innerHTML = day_total.toFixed(2); // + "KWh";
-                    week_total_kwh = week_total_kwh + day_total;
+                    
                     
                     
                     
@@ -420,6 +429,9 @@
                     
                     if(items_counter == total_items_count){
                         console.log("arrived at last day recorded (likely yesterday)");
+                        
+                        week_total_kwh = week_total_kwh + day_total;
+                        
                         clone.classList.add("extension-energyuse-item-today");
                         week_container.append(clone);
                         
