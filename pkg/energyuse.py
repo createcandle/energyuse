@@ -514,8 +514,8 @@ class EnergyUseAdapter(Adapter):
 
             
             # The total energy consumed ever, since the monitoring devices were bought
-            self.persistent_data['grand_total'] = round(kwh_total, 4)
-            
+            if kwh_total != 0:
+                self.persistent_data['grand_total'] = round(kwh_total, 4)
                 
             #
             # Hourly update
