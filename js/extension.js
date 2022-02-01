@@ -48,13 +48,13 @@
 
 		
 		hide() {
-			console.log("energyuse hide called");
+			//console.log("energyuse hide called");
 			
             try{
 				clearInterval(this.interval);
 			}
 			catch(e){
-				console.log("no interval to clear? " + e);
+				//console.log("no interval to clear? " + e);
 			} 
 		}
         
@@ -62,7 +62,7 @@
         
 
 	    show() {
-			console.log("energyuse show called");
+			//console.log("energyuse show called");
 			//console.log("this.content:");
 			//console.log(this.content);
 			
@@ -70,7 +70,7 @@
 				clearInterval(this.interval);
 			}
 			catch(e){
-				console.log("no interval to clear?: " + e);
+				//console.log("no interval to clear?: " + e);
 			}
             
 			
@@ -109,7 +109,7 @@
             
             // start -> get_init_data -> renegerate_items
             
-            console.log("in start");
+            //console.log("in start");
     	    API.getThings().then((things) => {
 			
     			this.all_things = things;
@@ -139,7 +139,7 @@
                 }
             }
             catch(e){
-                console.log("Energy Use: get_title: Error looping over things: ", e);
+                //console.log("Energy Use: get_title: Error looping over things: ", e);
             }
 			return thing_title;
         }
@@ -147,7 +147,7 @@
         
     
         get_init_data(){
-            console.log('in get_init_data');
+            //console.log('in get_init_data');
 			try{
 				
 		  		// Init
@@ -156,17 +156,17 @@
                     {'action':'init'}
 
 		        ).then((body) => {
-					console.log("Init API result:");
-					console.log(body);
+					//console.log("Init API result:");
+					//console.log(body);
                     
                     this.persistent_data = body.persistent;
                     if(typeof this.persistent_data['device_detail_days'] != 'undefined'){
                         this.device_detail_days = parseInt(this.persistent_data['device_detail_days']);
-                        console.log("device_detail_days is set to: " + this.persistent_data['device_detail_days']);
+                        //console.log("device_detail_days is set to: " + this.persistent_data['device_detail_days']);
                     }
                     
                     if(this.persistent_data.token == null || this.persistent_data.token == ''){
-                        console.log('no token present yet');
+                        //console.log('no token present yet');
                         document.getElementById('extension-energyuse-missing-token').style.display = 'block';
                     }
                     this.regenerate_items(this.persistent_data.energy);
@@ -190,13 +190,13 @@
 					
 				
 		        }).catch((e) => {
-		  			console.log("Error getting Energyuse init data: " + e.toString());
+		  			//console.log("Error getting Energyuse init data: " + e.toString());
 		        });	
 
 				
 			}
 			catch(e){
-				console.log("Error in init: " + e);
+				//console.log("Error in init: " + e);
 			}
         }
     
@@ -208,7 +208,7 @@
 	
 		regenerate_items(items, page){
 			try {
-				console.log("regenerating. items: ", items);
+				//console.log("regenerating. items: ", items);
 		
 				const pre = document.getElementById('extension-energyuse-response-data');
 				
@@ -248,9 +248,9 @@
                 var items_counter = 0;
                 
                 var showing_device_details = false;
-                console.log('items:', items);
+                //console.log('items:', items);
                 
-                console.log("items count: ", total_items_count);
+                //console.log("items count: ", total_items_count);
                 
                 
                 var week_container = document.createElement('div')
@@ -275,8 +275,8 @@
 					clone.removeAttribute('id');
                     //console.log("clone: ", clone);
                     
-                    console.log(" . ");
-                    console.log("timestamp: ", timestamp);
+                    //console.log(" . ");
+                    //console.log("timestamp: ", timestamp);
                     
                     var first_week_day = false;
                     
@@ -296,7 +296,7 @@
                     
                     // Get the date
                     var date = new Date((timestamp - 600) * 1000); // make sure the timestamp is in the day before
-                    console.log(date);
+                    //console.log(date);
                     
                     if(week_start_date_string == null){
                         week_start_date_string = "" + date.getDate()+"/"+(date.getMonth()+1);
@@ -312,7 +312,7 @@
                         }
                         
                         this.previous_day_number = current_day_number
-                        console.log("NEW DAY OK");
+                        //console.log("NEW DAY OK");
                         //console.log("device_count: " + device_count);
                         //console.log("previous_device_count: " + previous_device_count);
                         
@@ -353,7 +353,7 @@
                         
                     }
                     else{
-                        console.log("spotted new data for the same day as the previous day");
+                        //console.log("spotted new data for the same day as the previous day");
                     }
                     
                     const day_names = ['sun','mon','tue','wed','thu','fri','sat'];
@@ -368,7 +368,7 @@
                     
                     for (const device_id in day) {
                         if (day.hasOwnProperty(device_id)) {
-                            console.log(" -- device_id: ", device_id);
+                            //console.log(" -- device_id: ", device_id);
                             
                             var prev_value = day[device_id];
                             var current_value = day[device_id];
@@ -411,7 +411,7 @@
                                 device_count++;
                                 if(!showing_device_details){
                                     showing_device_details = true;
-                                    console.log('showing device details from now on ');
+                                    //console.log('showing device details from now on ');
                                     clone.classList.add("extension-energyuse-item-show-device-names");
                                 }
                             }
@@ -428,7 +428,7 @@
                     //console.log("items_counter: ", items_counter);
                     
                     if(items_counter == total_items_count){
-                        console.log("arrived at last day recorded (likely yesterday)");
+                        //console.log("arrived at last day recorded (likely yesterday)");
                         
                         week_total_kwh = week_total_kwh + day_total;
                         
@@ -452,7 +452,7 @@
 			}
 			catch (e) {
 				// statements to handle any exceptions
-				console.log("Error in regenerate_items: ", e); // pass exception object to error handler
+				//console.log("Error in regenerate_items: ", e); // pass exception object to error handler
 			}
 		}
 	
