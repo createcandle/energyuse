@@ -790,7 +790,6 @@ class EnergyUseAdapter(Adapter):
         #print("GET TOKEN = " + str(self.token))
         if self.token == None:
             print("API GET: PLEASE ENTER YOUR AUTHORIZATION CODE IN THE SETTINGS PAGE")
-            self.set_status_on_thing("Authorization code missing, check settings")
             return []
         
         try:
@@ -838,9 +837,6 @@ class EnergyUseAdapter(Adapter):
         except Exception as ex:
             print("Error doing http request/loading returned json: " + str(ex))
             
-            if self.DEBUG:
-                self.speak("I could not connect to API. ", intent=intent)
-            #return [] # or should this be {} ? Depends on the call perhaps.
             return {"error": 500}
 
 
