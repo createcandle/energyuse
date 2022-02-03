@@ -471,31 +471,38 @@ class EnergyUseAdapter(Adapter):
                                                         #print("self.persistent_data['energy'][previous_time]: " + str(self.persistent_data['energy'][str(previous_time)]))
                                                     
                                                         #print("self.persistent_data['energy'] = " + str(self.persistent_data['energy']))
-                                                        print("self.persistent_data['energy'][previous_time] = " + str(self.persistent_data['energy'][previous_time]))
+                                                        
                                                     
-                                                        if thing_id in self.persistent_data['energy'][previous_time]:
-                                                            if self.DEBUG:
-                                                                print('same thing_id spotted in previous time')
-                                                            previous_value = self.persistent_data['energy'][previous_time][thing_id]
-                                                            if self.DEBUG:
-                                                                print("previous " + str(property_id) + " value was: " + str(previous_value))
-                                                                print("TYPES. value " + str(value) + ", previous_value was: " + str(previous_value))
-                                                                print("TYPES. value " + str(type(value)) + ", previous_value was: " + str(type(previous_value)))
+                                                        if previous_time in self.persistent_data['energy']:
+                                                            print("self.persistent_data['energy'][previous_time] = " + str(self.persistent_data['energy'][previous_time]))
+                                                            
+                                                            if thing_id in self.persistent_data['energy'][previous_time]:
+                                                                if self.DEBUG:
+                                                                    print('same thing_id spotted in previous time')
+                                                                previous_value = self.persistent_data['energy'][previous_time][thing_id]
+                                                                if self.DEBUG:
+                                                                    print("previous " + str(property_id) + " value was: " + str(previous_value))
+                                                                    print("current value: " + str(value) + ", previous_value was: " + str(previous_value))
+                                                                    #print("TYPES. value " + str(type(value)) + ", previous_value was: " + str(type(previous_value)))
                                                                 
                     
-                                                            if value > previous_value:
-                                                                print("new device kwh value was bigger than midnight value")
-                                                                device_delta = value - previous_value
-                                                                if self.DEBUG:
-                                                                    print("since midnight this device has used: " + str(device_delta))
-                                                                day_delta = day_delta + device_delta
-                                                                print("day_delta  is now: " + str(day_delta ))
+                                                                if value > previous_value:
+                                                                    print("new device kwh value was bigger than midnight value")
+                                                                    device_delta = value - previous_value
+                                                                    if self.DEBUG:
+                                                                        print("since midnight this device has used: " + str(device_delta))
+                                                                    day_delta = day_delta + device_delta
+                                                                    print("day_delta  is now: " + str(day_delta ))
+                                                                else:
+                                                                    if self.DEBUG:
+                                                                        print("Device had same as (or lower value than) before.")
                                                             else:
                                                                 if self.DEBUG:
-                                                                    print("Device had same as (or lower value than) before.")
+                                                                    print("there was data for yesterday, but this device was not present in it: " + str(thing_id))
+                                                        
                                                         else:
                                                             if self.DEBUG:
-                                                                print("there was data for yesterday, but this device was not present in it: " + str(thing_id))
+                                                                print("That previous time was not in the data somehow.")
                                                 
                                                 except Exception as ex:
                                                     print("Error comparing to previous time: " + str(ex))
@@ -512,101 +519,107 @@ class EnergyUseAdapter(Adapter):
 
 
 
-            
-            # The total energy consumed ever, since the monitoring devices were bought
-            if kwh_total != 0:
-                self.persistent_data['grand_total'] = round(kwh_total, 4)
+            try:
                 
-            #
-            # Hourly update
-            #
-            """
-            if self.DEBUG:
-                print("total-ever reported energy use by monitoring devices: " + str(kwh_total) )
-            if self.previous_hour_total == None:
-                print("storing previous_hour_total for quick hourly insight")
-                self.previous_hour_total = kwh_total
-            else:
-                if kwh_total >= self.previous_hour_total:
-                    hourly_delta_from_total = kwh_total - self.previous_hour_total
-                    self.set_value_on_thing('lasthour',hourly_delta_from_total)
+                if kwh_total != 0:
+                    self.persistent_data['grand_total'] = round(kwh_total, 4)
+                
+                #
+                # Hourly update
+                #
+                """
+                if self.DEBUG:
+                    print("total-ever reported energy use by monitoring devices: " + str(kwh_total) )
+                if self.previous_hour_total == None:
+                    print("storing previous_hour_total for quick hourly insight")
                     self.previous_hour_total = kwh_total
-            """
+                else:
+                    if kwh_total >= self.previous_hour_total:
+                        hourly_delta_from_total = kwh_total - self.previous_hour_total
+                        self.set_value_on_thing('lasthour',hourly_delta_from_total)
+                        self.previous_hour_total = kwh_total
+                """
             
-            current_date = datetime.datetime.now() 
-            current_hour = current_date.hour
+                current_date = datetime.datetime.now() 
+                current_hour = current_date.hour
             
            
-            if not 'previous_hour' in self.persistent_data:
-                print("saving initial previous_hour to persistent data.")
-                self.persistent_data['previous_hour'] = current_hour
-                
-            else:
-                print("current hour should be 1 more than previous hour:")
-                print("self.persistent_data['previous_hour']: " + str(self.persistent_data['previous_hour']))
-                print("current_hour: " + str(current_hour))
-                
-                if self.persistent_data['previous_hour'] != current_hour:
-                    if self.persistent_data['previous_hour_day_delta'] != None:
-                        if self.DEBUG:
-                            print("hour-delta. day_delta: " + str(day_delta))
-                            print("hour-delta. self.persistent_data['previous_hour_day_delta']: " + str(self.persistent_data['previous_hour_day_delta']))
-                        if day_delta > self.persistent_data['previous_hour_day_delta']:
-                            if self.DEBUG:
-                                print("day delta was bigger than the previous hour, so should update hourly use property on thing")
-                            hourly_delta = day_delta - self.persistent_data['previous_hour_day_delta']
-                            if self.DEBUG:
-                                print("hourly change: " + str(hourly_delta))
-                            self.set_value_on_thing('lasthour',hourly_delta)
-                        else:
-                            if self.DEBUG:
-                                print("day_delta was same or smaller than previous self.previous_hour_day_delta. No additional energy used this hour?")
-                      
-                        #if store_data:
-                        #    self.persistent_data['previous_hour_day_delta'] = 0 # at midnight we calculate the last hourly delta (above), and then reset, so that at 1am it will use 0 as the previous value
-            
-                    self.persistent_data['previous_hour_day_delta'] = round(day_delta, 4) # to kwh of the day so far, to check if that today-so-far value has grown over the last hour.
+                if not 'previous_hour' in self.persistent_data:
+                    print("saving initial previous_hour to persistent data.")
                     self.persistent_data['previous_hour'] = current_hour
                 
                 else:
-                    if self.DEBUG:
-                        print("A measurement was already taken at the start of this hour. Addon was likely restarted.")
+                    print("current hour should be 1 more than previous hour:")
+                    print("self.persistent_data['previous_hour']: " + str(self.persistent_data['previous_hour']))
+                    print("current_hour: " + str(current_hour))
+                
+                    if self.persistent_data['previous_hour'] != current_hour:
+                        if self.persistent_data['previous_hour_day_delta'] != None:
+                            if self.DEBUG:
+                                print("hour-delta. day_delta: " + str(day_delta))
+                                print("hour-delta. self.persistent_data['previous_hour_day_delta']: " + str(self.persistent_data['previous_hour_day_delta']))
+                            if day_delta > self.persistent_data['previous_hour_day_delta']:
+                                if self.DEBUG:
+                                    print("day delta was bigger than the previous hour, so should update hourly use property on thing")
+                                hourly_delta = day_delta - self.persistent_data['previous_hour_day_delta']
+                                if self.DEBUG:
+                                    print("hourly change: " + str(hourly_delta))
+                                self.set_value_on_thing('lasthour',hourly_delta)
+                            else:
+                                if self.DEBUG:
+                                    print("day_delta was same or smaller than previous self.previous_hour_day_delta. No additional energy used this hour?")
+                      
+                            #if store_data:
+                            #    self.persistent_data['previous_hour_day_delta'] = 0 # at midnight we calculate the last hourly delta (above), and then reset, so that at 1am it will use 0 as the previous value
+            
+                        self.persistent_data['previous_hour_day_delta'] = round(day_delta, 4) # to kwh of the day so far, to check if that today-so-far value has grown over the last hour.
+                        self.persistent_data['previous_hour'] = current_hour
+                
+                    else:
+                        if self.DEBUG:
+                            print("A measurement was already taken at the start of this hour. Addon was likely restarted.")
                       
             
-            # 
-            #  Yesterday, set at mignight
-            #
+                # 
+                #  Yesterday, set at mignight
+                #
             
-            if store_data:
-                #if not 'previous_time' in self.persistent_data:
-                if self.DEBUG:
-                    print("MIDNIGHT. doing yesterday update. Saving 'previous_time' and day_delta to persistent data")
-                self.persistent_data['previous_time'] = self.current_time
-                #self.persistent_data['previous_delta'] = round(day_delta, 5)
+                if store_data:
+                    #if not 'previous_time' in self.persistent_data:
+                    if self.DEBUG:
+                        print("MIDNIGHT. doing yesterday update. Saving 'previous_time' and day_delta to persistent data")
+                    self.persistent_data['previous_time'] = self.current_time
+                    #self.persistent_data['previous_delta'] = round(day_delta, 5)
                 
-                self.persistent_data['yesterday_total'] = round(day_delta, 4)
-                #self.persistent_data['energy'][self.current_time]['day_delta'] = round(day_delta, 4)
+                    self.persistent_data['yesterday_total'] = round(day_delta, 4)
+                    #self.persistent_data['energy'][self.current_time]['day_delta'] = round(day_delta, 4)
                 
-                self.set_value_on_thing('yesterday', round(day_delta, 4))
+                    self.set_value_on_thing('yesterday', round(day_delta, 4))
                 
-                self.set_value_on_thing('today', 0) # reset today value to 0
-                self.persistent_data['previous_hour_day_delta'] = 0
+                    self.set_value_on_thing('today', 0) # reset today value to 0
+                    self.persistent_data['previous_hour_day_delta'] = 0
                 
-                if self.persistent_data['previous_hour'] != 0:
-                    print("ERROR! The hourly update had not already set self.persistent_data['previous_hour'] to 0")
-                    self.persistent_data['previous_hour'] = 0
+                    if self.persistent_data['previous_hour'] != 0:
+                        print("ERROR! The hourly update had not already set self.persistent_data['previous_hour'] to 0")
+                        self.persistent_data['previous_hour'] = 0
             
-            #
-            # Today - updates hourly throughout the day
-            #
+                #
+                # Today - updates hourly throughout the day
+                #
             
-            elif day_delta > 0:
-                if self.DEBUG:
-                    print("Setting current day delta as today on thing")
-                self.set_value_on_thing('today', round(day_delta, 4)) # set today value to the differnce from what it was at midnight
-            else:
-                if self.DEBUG:
-                    print("day_delta was 0. No energy used since midnight?")
+                elif day_delta > 0:
+                    if self.DEBUG:
+                        print("Setting current day delta as today on thing")
+                    self.set_value_on_thing('today', round(day_delta, 4)) # set today value to the differnce from what it was at midnight
+                else:
+                    if self.DEBUG:
+                        print("day_delta was 0. No energy used since midnight?")
+                        
+                
+            except Exception as ex:
+                print("Error using new data to set values on things: " + str(ex))
+            # The total energy consumed ever, since the monitoring devices were bought
+            
 
             self.save_persistent_data()
             
