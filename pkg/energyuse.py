@@ -166,7 +166,7 @@ class EnergyUseAdapter(Adapter):
             print("Error starting the clock thread: " + str(ex))
 
         self.ready = True
-
+        self.save_persistent_data()
 
 
 
@@ -351,7 +351,7 @@ class EnergyUseAdapter(Adapter):
                     print("Error: get_energy_data: no valid things data. Stopping.")
                 return
             
-            self.current_time = int(time.time())
+            self.current_time = str( int(time.time()) )
             day_delta = 0
             kwh_total = 0
             
@@ -400,7 +400,7 @@ class EnergyUseAdapter(Adapter):
                                             
                                         if not self.current_time in self.persistent_data['energy']:
                                             print("adding time to energy")
-                                            self.persistent_data['energy'][self.current_time] = {}
+                                            self.persistent_data['energy'][str(self.current_time)] = {}
                                     
 
                                 
@@ -459,7 +459,7 @@ class EnergyUseAdapter(Adapter):
                                                     
                                                 if store_data:
                                                     # We only store the new values at the end of the day
-                                                    self.persistent_data['energy'][self.current_time][thing_id] = round(value, 5) #{'value':value}
+                                                    self.persistent_data['energy'][str(self.current_time)][thing_id] = round(value, 5) #{'value':value}
                                             
                                                 #self.save_persistent_data()
                                                 try:
@@ -588,7 +588,7 @@ class EnergyUseAdapter(Adapter):
                     #if not 'previous_time' in self.persistent_data:
                     if self.DEBUG:
                         print("MIDNIGHT. doing yesterday update. Saving 'previous_time' and day_delta to persistent data")
-                    self.persistent_data['previous_time'] = self.current_time
+                    self.persistent_data['previous_time'] = str(self.current_time)
                     #self.persistent_data['previous_delta'] = round(day_delta, 5)
                 
                     self.persistent_data['yesterday_total'] = round(day_delta, 4)
@@ -786,9 +786,7 @@ class EnergyUseAdapter(Adapter):
         """Returns data from the WebThings Gateway API."""
         if self.DEBUG:
             print("GET PATH = " + str(api_path))
-            #print("intent in api_get: " + str(intent))
-        #print("GET TOKEN = " + str(self.token))
-        if self.token == None:
+        if self.persistent_data['token'] == None:
             print("API GET: PLEASE ENTER YOUR AUTHORIZATION CODE IN THE SETTINGS PAGE")
             return []
         
@@ -796,7 +794,7 @@ class EnergyUseAdapter(Adapter):
             r = requests.get(self.api_server + api_path, headers={
                   'Content-Type': 'application/json',
                   'Accept': 'application/json',
-                  'Authorization': 'Bearer ' + str(self.token),
+                  'Authorization': 'Bearer ' + str(self.persistent_data['token']),
                 }, verify=False, timeout=5)
             if self.DEBUG:
                 print("API GET: " + str(r.status_code) + ", " + str(r.reason))
