@@ -150,14 +150,16 @@
             //console.log('in get_init_data');
 			try{
 				
+                const jwt = localStorage.getItem('jwt');
+                
 		  		// Init
 		        window.API.postJson(
 		          `/extensions/${this.id}/api/ajax`,
-                    {'action':'init'}
+                    {'action':'init', 'jwt':jwt}
 
 		        ).then((body) => {
-					//console.log("Init API result:");
-					//console.log(body);
+					console.log("Init API result: ");
+					console.log(body);
                     
                     this.persistent_data = body.persistent;
                     if(typeof this.persistent_data['device_detail_days'] != 'undefined'){

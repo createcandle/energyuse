@@ -461,6 +461,9 @@ class EnergyUseAdapter(Adapter):
                                                     # We only store the new values at the end of the day
                                                     self.persistent_data['energy'][str(self.current_time)][thing_id] = round(value, 5) #{'value':value}
                                             
+                                                else:
+                                                    if self.DEBUG:
+                                                        print('The new value is not being stored because it is not midnight yet')
                                                 #self.save_persistent_data()
                                                 try:
                                                     if 'previous_time' in self.persistent_data:
@@ -503,6 +506,10 @@ class EnergyUseAdapter(Adapter):
                                                         else:
                                                             if self.DEBUG:
                                                                 print("That previous time was not in the data somehow.")
+                                                    
+                                                    else:
+                                                        if self.DEBUG:
+                                                            print("'previous time' variable was not found in the persistent data yet. The addon was probably just installed.")
                                                 
                                                 except Exception as ex:
                                                     print("Error comparing to previous time: " + str(ex))
@@ -545,13 +552,15 @@ class EnergyUseAdapter(Adapter):
             
            
                 if not 'previous_hour' in self.persistent_data:
-                    print("saving initial previous_hour to persistent data.")
+                    if self.DEBUG:
+                        print("saving initial previous_hour to persistent data.")
                     self.persistent_data['previous_hour'] = current_hour
                 
                 else:
-                    print("current hour should be 1 more than previous hour:")
-                    print("self.persistent_data['previous_hour']: " + str(self.persistent_data['previous_hour']))
-                    print("current_hour: " + str(current_hour))
+                    if self.DEBUG:
+                        print("current hour should be 1 more than previous hour:")
+                        print("self.persistent_data['previous_hour']: " + str(self.persistent_data['previous_hour']))
+                        print("current_hour: " + str(current_hour))
                 
                     if self.persistent_data['previous_hour'] != current_hour:
                         if self.persistent_data['previous_hour_day_delta'] != None:
@@ -596,6 +605,8 @@ class EnergyUseAdapter(Adapter):
                 
                     self.set_value_on_thing('yesterday', round(day_delta, 4))
                 
+                    self.set_value_on_thing('today', round(day_delta, 4))
+                    time.sleep(.5)
                     self.set_value_on_thing('today', 0) # reset today value to 0
                     self.persistent_data['previous_hour_day_delta'] = 0
                 

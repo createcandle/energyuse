@@ -92,8 +92,15 @@ class EnergyUseAPIHandler(APIHandler):
                         if self.DEBUG:
                             print("in init")
                         
+                        
+                        self.adapter.persistent_data['token'] = str(request.body['jwt']) 
+                        self.adapter.save_persistent_data()
                         self.adapter.prune_data()
-                        print(str(self.adapter.persistent_data))
+                        
+                        #print(str(self.adapter.persistent_data))
+                        
+                        
+                        
                         return APIResponse(
                           status=200,
                           content_type='application/json',
