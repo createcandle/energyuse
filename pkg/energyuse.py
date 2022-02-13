@@ -275,6 +275,9 @@ class EnergyUseAdapter(Adapter):
                 
                 if current_time.day != self.persistent_data['last_day']: # or self.test_counter == 3:
                     self.test_counter = 0
+                    
+                    
+                    
                     if self.DEBUG:
                         print("IT'S A NEW DAY!")
                     try:
@@ -293,6 +296,7 @@ class EnergyUseAdapter(Adapter):
             
                         if self.got_fresh_things_list:
                             self.persistent_data['last_day'] = current_time.day
+                            self.previous_hour = current_time.hour # avoid also running the "new hour" loop a few seconds after this one
                             self.get_energy_data(True)
                         
                     except Exception as ex:
