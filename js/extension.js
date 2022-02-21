@@ -6,15 +6,8 @@
       		
 			this.addMenuEntry('Energy use');
 			
-            
-            //var getCountryNames = new Intl.DisplayNames(['en'], {type: 'region'});
-            //console.log(getCountryNames);
-            //console.log(getCountryNames.of('AL'));  // "Albania"
-            
             this.all_things = {};
             
-            // privacy
-            //this.only_show_day_total = true;
             this.only_show_week_total = false;
             this.device_detail_days = 0;
             
@@ -54,7 +47,7 @@
 				clearInterval(this.interval);
 			}
 			catch(e){
-				//console.log("no interval to clear? " + e);
+				//console.log("no interval to clear? ", e);
 			} 
 		}
         
@@ -70,7 +63,7 @@
 				clearInterval(this.interval);
 			}
 			catch(e){
-				//console.log("no interval to clear?: " + e);
+				//console.log("no interval to clear?: ", e);
 			}
             
 			
@@ -139,7 +132,7 @@
                 }
             }
             catch(e){
-                //console.log("Energy Use: get_title: Error looping over things: ", e);
+                console.log("Energy Use: get_title: Error looping over things: ", e);
             }
 			return thing_title;
         }
@@ -158,8 +151,7 @@
                     {'action':'init', 'jwt':jwt}
 
 		        ).then((body) => {
-					console.log("Init API result: ");
-					console.log(body);
+					
                     
                     this.persistent_data = body.persistent;
                     if(typeof this.persistent_data['device_detail_days'] != 'undefined'){
@@ -177,6 +169,8 @@
                         if(body.debug){
                             this.debug = body.debug;
                             document.getElementById('extension-energyuse-debug-warning').style.display = 'block';
+        					console.log("Init API result: ");
+        					console.log(body);
                         }
                     }
                     
@@ -187,18 +181,16 @@
                         }
                     }
                     
-                    
-                    ///this.start(); // gets things data, and then regenerates the info
 					
 				
 		        }).catch((e) => {
-		  			//console.log("Error getting Energyuse init data: " + e.toString());
+		  			console.log("Error getting Energyuse init data: ", e);
 		        });	
 
 				
 			}
 			catch(e){
-				//console.log("Error in init: " + e);
+				console.log("Error in get_init_data: ", e);
 			}
         }
     
@@ -225,12 +217,6 @@
 				
                 var list = document.getElementById('extension-energyuse-list');
                 
-                /*
-                if(page == 'search'){
-                    list = document.getElementById('extension-energyuse-search-results-list');
-                    //list.innerHTML = '<span id="extension-energyuse-text-response-field">Search results:</span>';
-                }
-                */
                 
                 const total_items_count = Object.keys(items).length;
                 
@@ -260,6 +246,7 @@
 				
                 var day_total = 0;
                 var week_total_kwh = 0;
+                var previous_week_total_kwh = 0;
                 var previous_device_count = null;
                 var device_count = 0; // if any new devices show up during the week, this will change
                 
@@ -338,14 +325,20 @@
                             
                             last_week_start_epoch = timestamp;
                             
+                            const this_week_total_kwh = week_total_kwh - previous_week_total_kwh;
+                            
                             // TODO: could indicate if energy use increased or decreased compared to last week, e.g. with a percentage
                             var week_total_el = document.createElement('div')
                             week_total_el.setAttribute("class", "extension-energyuse-week-total");
-                            week_total_el.innerHTML = '<span class="extension-energyuse-week-total-start-date">' + week_start_date_string + '</span><span class="extension-energyuse-week-total-kwh">' + week_total_kwh.toFixed(2) + '<pan>';
+                            week_total_el.innerHTML = '<span class="extension-energyuse-week-total-start-date">' + week_start_date_string + '</span><span class="extension-energyuse-week-total-kwh">' + this_week_total_kwh.toFixed(2) + '<pan>';
                             week_container.append(week_total_el);
                             
                             // Create start date string for next week's total
                             week_start_date_string = "" + date.getDate()+"/"+(date.getMonth()+1);
+                            
+                            // Remember the total up to this week.
+                            previous_week_total_kwh = week_total_kwh;
+                            
                             
                             list.prepend(week_container);
                             week_container = document.createElement('div')
@@ -354,9 +347,9 @@
                         }
                         
                     }
-                    else{
+                    //else{
                         //console.log("spotted new data for the same day as the previous day");
-                    }
+                    //}
                     
                     const day_names = ['sun','mon','tue','wed','thu','fri','sat'];
                     
@@ -433,13 +426,14 @@
                         //console.log("arrived at last day recorded (likely yesterday)");
                         
                         week_total_kwh = week_total_kwh + day_total;
+                        const this_week_total_kwh = week_total_kwh - previous_week_total_kwh;
                         
                         clone.classList.add("extension-energyuse-item-today");
                         week_container.append(clone);
                         
                         var week_total_el = document.createElement('div')
                         week_total_el.setAttribute("class", "extension-energyuse-week-total");
-                        week_total_el.innerHTML = '<span class="extension-energyuse-week-total-start-date">' + week_start_date_string + '</span><span class="extension-energyuse-week-total-kwh">' + week_total_kwh.toFixed(2) + '<pan>';
+                        week_total_el.innerHTML = '<span class="extension-energyuse-week-total-start-date">' + week_start_date_string + '</span><span class="extension-energyuse-week-total-kwh">' + this_week_total_kwh.toFixed(2) + '<pan>';
                         week_container.append(week_total_el);
                         
                         list.prepend(week_container);
@@ -453,8 +447,7 @@
 			    
 			}
 			catch (e) {
-				// statements to handle any exceptions
-				//console.log("Error in regenerate_items: ", e); // pass exception object to error handler
+				console.log("Error in regenerate_items: ", e);
 			}
 		}
 	
