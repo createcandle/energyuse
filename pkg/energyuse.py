@@ -257,12 +257,12 @@ class EnergyUseAdapter(Adapter):
                     self.save_persistent_data()
                     if self.DEBUG:
                         print('last_day  was not in persistent data yet. Added it now: ' + str(self.persistent_data['last_day']))
-                else:
-                    if self.DEBUG:
-                        print('previous day in persistent data: ' + str(self.persistent_data['last_day']))
- 
-                if self.DEBUG:
-                    print ("today is: " + str(current_time.day))
+                #else:
+                #    if self.DEBUG:
+                #        print('previous day in persistent data: ' + str(self.persistent_data['last_day']))
+                #
+                #if self.DEBUG:
+                #    print ("today is: " + str(current_time.day))
                 
                 
              

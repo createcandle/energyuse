@@ -73,7 +73,7 @@
     }
   },
   "short_name": "Energy",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
