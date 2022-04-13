@@ -106,8 +106,8 @@ class EnergyUseAdapter(Adapter):
             print("ERROR: Could not load persistent data (if you just installed the add-on then this is normal): " + str(ex))
             self.persistent_data = {'energy':{}, 'api_server':'http://127.0.0.1:8080','token':None, 'device_detail_days':14, 'data_retention_months':24}
 
-        print("--.--")
-        print('self.persistent_data: ' + str(self.persistent_data))
+        #print("--.--")
+        #print('self.persistent_data: ' + str(self.persistent_data))
 
         # LOAD CONFIG
         try:
@@ -121,7 +121,7 @@ class EnergyUseAdapter(Adapter):
             self.persistent_data['previous_hour_day_delta'] = None
 
         if 'previous_hour' in self.persistent_data:
-            print("setting previous_hour from persistent data: " + str(self.persistent_data['previous_hour'])) # TODO: do this using the last timestamp instead, to be very sure that the addon was restarted quickly, and not hours or days later.
+            #print("setting previous_hour from persistent data: " + str(self.persistent_data['previous_hour'])) # TODO: do this using the last timestamp instead, to be very sure that the addon was restarted quickly, and not hours or days later.
             self.previous_hour = self.persistent_data['previous_hour']
 
         self.prune_data()
