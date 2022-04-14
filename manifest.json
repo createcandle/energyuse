@@ -60,7 +60,7 @@
           "type": "string"
         },
         "Authorization token": {
-          "description": "To be allowed to get information on all your devices, you have to create an 'authorization' code. It's basically a very long password. You can generate it yourself under Settings -> Developer -> Create local authorization",
+          "description": "Advanced. To be allowed to get information on all your devices, you have to create an 'authorization' code. It's basically a very long password. You can generate it yourself under Settings -> Developer -> Create local authorization",
           "type": "string"
         },
         "Debugging": {
@@ -73,7 +73,7 @@
     }
   },
   "short_name": "Energy",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
