@@ -40,6 +40,6 @@ shasum --algorithm 256 ${TARFILE} > ${TARFILE}.sha256sum
 #rm -rf SHA256SUMS package
 #sha256sum "internet-radio-${version}.tgz"
 
-tar czf "energyuse-${version}.tgz" package
-cat ${TARFILE}.sha256sum
+#tar czf "energyuse-${version}.tgz" package
+#cat ${TARFILE}.sha256sum
 #sha256sum "internet-radio-${version}.tgz"
