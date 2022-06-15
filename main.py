@@ -30,7 +30,7 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, cleanup)
     _ADAPTER = EnergyUseAdapter(verbose=_DEBUG)
 
-    print("Energy use addon started")
+    #print("Energy use addon started")
     
     # Wait until the proxy stops running, indicating that the gateway shut us
     # down.
