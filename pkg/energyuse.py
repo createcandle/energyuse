@@ -825,32 +825,35 @@ class EnergyUseAdapter(Adapter):
                 return {"error": str(r.status_code)}
                 
             else:
-                to_return = r.text
-                try:
-                    if self.DEBUG:
-                        print("api_get: received: " + str(r))
-                    #for prop_name in r:
-                    #    print(" -> " + str(prop_name))
-                    if not '{' in r.text:
-                        if self.DEBUG:
-                            print("api_get: response was not json (gateway 1.1.0 does that). Turning into json...")
-                        
-                        if 'things/' in api_path and '/properties/' in api_path:
+                if r.text != None:
+                    if len(r.text) > 0:
+                        to_return = r.text
+                        try:
                             if self.DEBUG:
-                                print("properties was in api path: " + str(api_path))
-                            likely_property_name = api_path.rsplit('/', 1)[-1]
-                            to_return = {}
-                            to_return[ likely_property_name ] = json.loads(r.text)
-                            if self.DEBUG:
-                                print("returning fixed: " + str(to_return))
-                            return to_return
+                                print("api_get: received: " + str(r))
+                            #for prop_name in r:
+                            #    print(" -> " + str(prop_name))
+                    
+                            if not '{' in r.text:
+                                if self.DEBUG:
+                                    print("api_get: response was not json (gateway 1.1.0 does that). Turning into json...")
+                    
+                                if 'things/' in api_path and '/properties/' in api_path:
+                                    if self.DEBUG:
+                                        print("properties was in api path: " + str(api_path))
+                                    likely_property_name = api_path.rsplit('/', 1)[-1]
+                                    to_return = {}
+                                    to_return[ likely_property_name ] = json.loads(r.text)
+                                    if self.DEBUG:
+                                        print("returning fixed: " + str(to_return))
+                                    return to_return
                                 
-                except Exception as ex:
-                    print("api_get_fix error: " + str(ex))
+                        except Exception as ex:
+                            print("api_get_fix error: " + str(ex))
                         
-                if self.DEBUG:
-                    print("returning without 1.1.0 fix")
-                return json.loads(r.text)
+                        if self.DEBUG:
+                            print("returning without 1.1.0 fix")
+                        return json.loads(r.text)
             
         except Exception as ex:
             print("Error doing http request/loading returned json: " + str(ex))
