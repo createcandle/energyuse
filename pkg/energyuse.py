@@ -431,94 +431,97 @@ class EnergyUseAdapter(Adapter):
                                         property_result = self.api_get(property_href)
                                         if self.DEBUG:
                                             print("api result: " + str(property_result))
-                                        if hasattr(property_result, 'error'):
-                                            if self.DEBUG:
-                                                print("get property value: get_api returned an error.")
-                                            time.sleep(10)
-                                            property_result = self.api_get(property_href)
-                                
-                                        if hasattr(property_result, 'error'):
-                                            if self.DEBUG:
-                                                print("darn, two API errors in a row")
-                                        else:
-                                            #print("api call was ok")
-                                            property_id = property_href.rsplit('/', 1)[-1]
-                                            if property_id in property_result:
-                                                value = property_result[property_id]
-                                                if self.DEBUG:
-                                                    print(str(property_id) + " gave: " + str(value))
-                                                    
-                                                try:
-                                                    test = int(value)
-                                                    if self.DEBUG:
-                                                        print('api result was a number')
-                                                except:
-                                                    if self.DEBUG:
-                                                        print('value was not a number, skipping device')
-                                                    continue
-                                                    
-                                                kwh_total += value
-                                                if self.DEBUG:
-                                                    print("---------- > > kwh_total is now: " + str(kwh_total))
-                                                    
-                                                if store_data:
-                                                    # We only store the new values at the end of the day
-                                                    self.persistent_data['energy'][str(self.current_time)][thing_id] = round(value, 5) #{'value':value}
                                             
-                                                else:
-                                                    if self.DEBUG:
-                                                        print('The new value is not being stored because it is not midnight yet')
-                                                #self.save_persistent_data()
-                                                try:
-                                                    if 'previous_time' in self.persistent_data:
-                                                        previous_time = str(self.persistent_data['previous_time'])
+                                        if property_result != None:
+                                            if hasattr(property_result, 'error'):
+                                                if self.DEBUG:
+                                                    print("get property value: get_api returned an error.")
+                                                time.sleep(10)
+                                                property_result = self.api_get(property_href)
+                                
+                                            if hasattr(property_result, 'error'):
+                                                if self.DEBUG:
+                                                    print("darn, two API errors in a row")
+                                            else:
+                                                #print("api call was ok")
+                                                if property_href != None:
+                                                    property_id = property_href.rsplit('/', 1)[-1]
+                                                    if property_id in property_result:
+                                                        value = property_result[property_id]
                                                         if self.DEBUG:
-                                                            print("previous_time (that data was stored) was in persistent data: " + str(previous_time))
-                                                        #print("self.persistent_data['energy'][previous_time]: " + str(self.persistent_data['energy'][str(previous_time)]))
+                                                            print(str(property_id) + " gave: " + str(value))
                                                     
-                                                        #print("self.persistent_data['energy'] = " + str(self.persistent_data['energy']))
-                                                        
-                                                    
-                                                        if previous_time in self.persistent_data['energy']:
+                                                        try:
+                                                            test = int(value)
                                                             if self.DEBUG:
-                                                                print("self.persistent_data['energy'][previous_time] = " + str(self.persistent_data['energy'][previous_time]))
-                                                            
-                                                            if thing_id in self.persistent_data['energy'][previous_time]:
-                                                                if self.DEBUG:
-                                                                    print('same thing_id spotted in previous time')
-                                                                previous_value = self.persistent_data['energy'][previous_time][thing_id]
-                                                                if self.DEBUG:
-                                                                    print("previous " + str(property_id) + " value was: " + str(previous_value))
-                                                                    print("current value: " + str(value) + ", previous_value was: " + str(previous_value))
-                                                                    #print("TYPES. value " + str(type(value)) + ", previous_value was: " + str(type(previous_value)))
-                                                                
-                    
-                                                                if value > previous_value:
-                                                                    if self.DEBUG:
-                                                                        print("new device kwh value was bigger than midnight value")
-                                                                    device_delta = value - previous_value
-                                                                    if self.DEBUG:
-                                                                        print("since midnight this device has used: " + str(device_delta))
-                                                                    day_delta = day_delta + device_delta
-                                                                    if self.DEBUG:
-                                                                        print("day_delta  is now: " + str(day_delta ))
-                                                                else:
-                                                                    if self.DEBUG:
-                                                                        print("Device had same as (or lower value than) before.")
-                                                            else:
-                                                                if self.DEBUG:
-                                                                    print("there was data for yesterday, but this device was not present in it: " + str(thing_id))
-                                                        
+                                                                print('api result was a number')
+                                                        except:
+                                                            if self.DEBUG:
+                                                                print('value was not a number, skipping device')
+                                                            continue
+                                                    
+                                                        kwh_total += value
+                                                        if self.DEBUG:
+                                                            print("---------- > > kwh_total is now: " + str(kwh_total))
+                                                    
+                                                        if store_data:
+                                                            # We only store the new values at the end of the day
+                                                            self.persistent_data['energy'][str(self.current_time)][thing_id] = round(value, 5) #{'value':value}
+                                            
                                                         else:
                                                             if self.DEBUG:
-                                                                print("That previous time was not in the data somehow.")
+                                                                print('The new value is not being stored because it is not midnight yet')
+                                                        #self.save_persistent_data()
+                                                        try:
+                                                            if 'previous_time' in self.persistent_data:
+                                                                previous_time = str(self.persistent_data['previous_time'])
+                                                                if self.DEBUG:
+                                                                    print("previous_time (that data was stored) was in persistent data: " + str(previous_time))
+                                                                #print("self.persistent_data['energy'][previous_time]: " + str(self.persistent_data['energy'][str(previous_time)]))
                                                     
-                                                    else:
-                                                        if self.DEBUG:
-                                                            print("'previous time' variable was not found in the persistent data yet. The addon was probably just installed.")
+                                                                #print("self.persistent_data['energy'] = " + str(self.persistent_data['energy']))
+                                                        
+                                                    
+                                                                if previous_time in self.persistent_data['energy']:
+                                                                    if self.DEBUG:
+                                                                        print("self.persistent_data['energy'][previous_time] = " + str(self.persistent_data['energy'][previous_time]))
+                                                            
+                                                                    if thing_id in self.persistent_data['energy'][previous_time]:
+                                                                        if self.DEBUG:
+                                                                            print('same thing_id spotted in previous time')
+                                                                        previous_value = self.persistent_data['energy'][previous_time][thing_id]
+                                                                        if self.DEBUG:
+                                                                            print("previous " + str(property_id) + " value was: " + str(previous_value))
+                                                                            print("current value: " + str(value) + ", previous_value was: " + str(previous_value))
+                                                                            #print("TYPES. value " + str(type(value)) + ", previous_value was: " + str(type(previous_value)))
+                                                                
+                    
+                                                                        if value > previous_value:
+                                                                            if self.DEBUG:
+                                                                                print("new device kwh value was bigger than midnight value")
+                                                                            device_delta = value - previous_value
+                                                                            if self.DEBUG:
+                                                                                print("since midnight this device has used: " + str(device_delta))
+                                                                            day_delta = day_delta + device_delta
+                                                                            if self.DEBUG:
+                                                                                print("day_delta  is now: " + str(day_delta ))
+                                                                        else:
+                                                                            if self.DEBUG:
+                                                                                print("Device had same as (or lower value than) before.")
+                                                                    else:
+                                                                        if self.DEBUG:
+                                                                            print("there was data for yesterday, but this device was not present in it: " + str(thing_id))
+                                                        
+                                                                else:
+                                                                    if self.DEBUG:
+                                                                        print("That previous time was not in the data somehow.")
+                                                    
+                                                            else:
+                                                                if self.DEBUG:
+                                                                    print("'previous time' variable was not found in the persistent data yet. The addon was probably just installed.")
                                                 
-                                                except Exception as ex:
-                                                    print("Error comparing to previous time: " + str(ex))
+                                                        except Exception as ex:
+                                                            print("Error comparing to previous time: " + str(ex))
                                                     
                                 except Exception as ex:
                                     print("Error while looping over energy property: " + str(ex))                        
