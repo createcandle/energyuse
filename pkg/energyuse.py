@@ -937,7 +937,7 @@ class EnergyUseDevice(Device):
                             self,
                             "lasthour",
                             {
-                                'title': "Last hour",
+                                'title': "Previous hour",
                                 'type': 'number',
                                 'readOnly': True,
                                 'minimum': 0,
