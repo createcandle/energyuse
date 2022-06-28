@@ -81,7 +81,7 @@ class EnergyUseAdapter(Adapter):
         self.addon_start_time = datetime.datetime.now() 
         self.previous_hour = self.addon_start_time.hour # used to remember the current hour
        
-        self.test_counter = 0
+        #self.test_counter = 0
         
         self.previous_hour_day_delta = None # used to remember what the day_delta value was an hour ago, in order to figure out how much was used in the last hour.. 
         self.previous_hour_total = None # used to remember the total Kwh the devices are reporting. This is not per-day data.
@@ -95,12 +95,6 @@ class EnergyUseAdapter(Adapter):
                 self.persistent_data = json.load(f)
                 if self.DEBUG:
                     print('self.persistent_data loaded from file: ' + str(self.persistent_data)) # print never gets called, debug is still false
-                
-
-                #if self.DEBUG:
-                print("Persistent data was loaded succesfully.")
-                    
-                
                 
         except Exception as ex:
             print("ERROR: Could not load persistent data (if you just installed the add-on then this is normal): " + str(ex))
@@ -273,16 +267,19 @@ class EnergyUseAdapter(Adapter):
                 
                 test = True
                 
-                if current_time.day != self.persistent_data['last_day']: # or self.test_counter == 3:
-                    self.test_counter = 0
-                    
-                    
+                
+                
+                if current_time.day != self.persistent_data['last_day'] and current_time.hour == 0: # or self.test_counter == 3:
+                    #self.test_counter = 0
                     
                     if self.DEBUG:
-                        print("IT'S A NEW DAY!")
-                    try:
+                        print("\nIT'S A NEW DAY!")
+                        print("- current_time.day: " + str(current_time.day))
+                        print("- current_time.hour: " + str(current_time.hour))
+                        print("- self.persistent_data['last_day']: " + str(self.persistent_data['last_day']))
                         
-                        # get fresh things data
+                    try:
+                        # get fresh things data. Trying 6 times.
                         self.got_fresh_things_list = False
                         for x in range(6):
                             #print("in for loop to get fresh things")
@@ -326,9 +323,9 @@ class EnergyUseAdapter(Adapter):
                         self.previous_hour = current_time.hour
                     
                 time.sleep(60)
-                self.test_counter += 1
-                if self.test_counter > 3:
-                    self.test_counter = 0
+                #self.test_counter += 1
+                #if self.test_counter > 3:
+                #    self.test_counter = 0
                 #
                 # Now that we're sure we're in the next day, go to sleep again.
                 #
@@ -620,7 +617,8 @@ class EnergyUseAdapter(Adapter):
                     self.persistent_data['previous_hour_day_delta'] = 0
                 
                     if self.persistent_data['previous_hour'] != 0:
-                        print("ERROR! The hourly update had not already set self.persistent_data['previous_hour'] to 0")
+                        if self.DEBUG:
+                            print("ERROR! The hourly update had not already set self.persistent_data['previous_hour'] to 0")
                         self.persistent_data['previous_hour'] = 0
             
                 #
@@ -637,7 +635,8 @@ class EnergyUseAdapter(Adapter):
                         
                 
             except Exception as ex:
-                print("Error using new data to set values on things: " + str(ex))
+                if self.DEBUG:
+                    print("Error using new data to set values on things: " + str(ex))
             # The total energy consumed ever, since the monitoring devices were bought
             
 
@@ -646,7 +645,8 @@ class EnergyUseAdapter(Adapter):
             
         
         except Exception as ex:
-            print("error in get_energy_data: " + str(ex))
+            if self.DEBUG:
+                print("error in get_energy_data: " + str(ex))
 
 
 
@@ -689,7 +689,8 @@ class EnergyUseAdapter(Adapter):
                 print("Data pruning: found no data that needed to be deleted")
                     
         except Exception as ex:
-            print("error during data pruning: " + str(ex))
+            if self.DEBUG:
+                print("error during data pruning: " + str(ex))
 
 
 
@@ -723,7 +724,8 @@ class EnergyUseAdapter(Adapter):
                 print("update_simple_things: got fresh things")
             
         except Exception as ex:
-            print("Error updating simple_things: " + str(ex))
+            if self.DEBUG:
+                print("Error updating simple_things: " + str(ex))
         
 
 
@@ -747,7 +749,8 @@ class EnergyUseAdapter(Adapter):
             else:
                 print("Error: could not set value on thing, the thing did not exist yet")
         except Exception as ex:
-            print("Error setting yesterday value of device:" + str(ex))
+            if self.DEBUG:
+                print("Error setting yesterday value of device:" + str(ex))
 
 
 
@@ -766,7 +769,8 @@ class EnergyUseAdapter(Adapter):
             if self.DEBUG:
                 print("User removed Energy Use device")
         except:
-            print("Could not remove things from devices")
+            if self.DEBUG:
+                print("Could not remove things from devices")
 
 
 
@@ -986,16 +990,22 @@ class EnergyUseProperty(Property):
             
             #print(str(type(value)))
             if value != None:
-                print("[...] property update. " + str(self.title) + " -> " + str(value))
+                if self.device.DEBUG:
+                    print("[...] property update. " + str(self.title) + " -> " + str(value))
             else:
-                print("[...] property update. " + str(self.title) + " -> None")
+                if self.device.DEBUG:
+                    print("[...] property update. " + str(self.title) + " -> None")
         
             if value != self.value:
                 self.value = value
                 self.set_cached_value(value)
                 self.device.notify_property_changed(self)
+            else:
+                if self.device.DEBUG:
+                    print("-it was already that value, igoring property update")
         except Exception as ex:
-            print("property: error updating value: " + str(ex))
+            if self.device.DEBUG:
+                print("property: error updating value: " + str(ex))
 
 
     
