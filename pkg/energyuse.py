@@ -1,8 +1,4 @@
-"""Energy use adapter for WebThings Gateway."""
-
-# test command to play radio: 
-# ffplay -nodisp -vn -infbuf -autoexit http://direct.fipradio.fr/live/fip-midfi.mp3 -volume 100
-
+"""Energy use adapter for Candle Controller."""
 
 import os
 import re
@@ -683,9 +679,9 @@ class EnergyUseAdapter(Adapter):
 
 
     def prune_data(self):
-        if self.DEBUG:
-            print("ENERGY USE DEBUGGING: PRUNING TEMPORARILY DISABLED")
-            return
+        #if self.DEBUG:
+        #    print("ENERGY USE DEBUGGING: PRUNING TEMPORARILY DISABLED")
+        #    return
             
         try:
             current_time = time.time();
@@ -700,6 +696,8 @@ class EnergyUseAdapter(Adapter):
                     del self.persistent_data['energy'][timestamp]
                     changes_made = True
 
+            """
+            # Very hard to do server side, it turns out. Doing it client side for now :-(
             for timestamp in self.persistent_data['energy']:
                 if int(timestamp) < current_time - device_detail_window:
                     # prune device details and replace them with a single device
@@ -725,6 +723,7 @@ class EnergyUseAdapter(Adapter):
                             self.persistent_data['energy'][timestamp]['total'] = day_total
                             changes_made = True
         
+            """
             if changes_made:
                 if self.DEBUG:
                     print("Data pruning: some old data was deleted")
