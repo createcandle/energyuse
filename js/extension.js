@@ -23,6 +23,20 @@
             this.searching = false;
             this.entered_search_page = false;
 
+            setTimeout(() => {
+                const jwt = localStorage.getItem('jwt');
+                //console.log("jwt: ", jwt);
+    	        window.API.postJson(
+    	          `/extensions/${this.id}/api/ajax`,
+    				{'action':'save_token','jwt':jwt}
+
+    	        ).then((body) => {
+                    console.log("energy use delayed update jwt response: ", body);
+    	        }).catch((e) => {
+    	  			console.log("Error (delayed) saving token: ", e);
+    	        });
+            }, 6100);
+            
             
 			fetch(`/extensions/${this.id}/views/content.html`)
 	        .then((res) => res.text())
@@ -169,7 +183,7 @@
                         if(body.debug){
                             this.debug = body.debug;
                             document.getElementById('extension-energyuse-debug-warning').style.display = 'block';
-        					console.log("Init API result: ");
+        					console.log("Energy use init API result: ");
         					console.log(body);
                         }
                     }
@@ -200,6 +214,9 @@
 		//  REGENERATE ITEMS
 		//
 	
+    
+    
+    
 		regenerate_items(items, page){
 			try {
 				//console.log("regenerating. items: ", items);
@@ -212,11 +229,9 @@
                 if(typeof items == 'undefined'){
                     items = this.persistent_data.energy;
                 }
-			
 				//items.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1) // sort alphabetically
 				
                 var list = document.getElementById('extension-energyuse-list');
-                
                 
                 const total_items_count = Object.keys(items).length;
                 
@@ -257,15 +272,17 @@
                 
                 var previous_day_number = 8; // this will cause a week_container to be immediately made
                 
+                var week_data = [];
+                var week_devices = {};
+                var week_available_day_number = 0;
+                
                 // Loop over all items
 				for( var timestamp in items ){
                     
+                    console.log("\n\n.");
+                    
 					var clone = original.cloneNode(true);
 					clone.removeAttribute('id');
-                    //console.log("clone: ", clone);
-                    
-                    //console.log(" . ");
-                    //console.log("timestamp: ", timestamp);
                     
                     var first_week_day = false;
                     
@@ -276,16 +293,18 @@
                     var should_create_new_week = false;
                     if(last_week_start_epoch != null){
                         if(timestamp - last_week_start_epoch > 618800000){ // at least a week has passed.
+                            //console.log("at least a week has passed");
                             should_create_new_week = true;
+                            week_available_day_number = 0;
                         }
                     }
-                        
+                    //console.log("week_available_day_number: ", week_available_day_number);
                         
                     
                     
                     // Get the date
                     var date = new Date((timestamp - 600) * 1000); // make sure the timestamp is in the day before
-                    //console.log(date);
+                    //console.log("date in day before: ", date);
                     
                     if(week_start_date_string == null){
                         week_start_date_string = "" + date.getDate()+"/"+(date.getMonth()+1);
@@ -293,11 +312,27 @@
                     
                     const current_day_number = date.getDay();
                     
-                    
                     if( current_day_number != this.previous_day_number){
                         
+                        //console.log("new day");
+                        week_available_day_number++; // may be less than 7 is there is only data for, say, 4 days in this week.
+                        
                         if( current_day_number < this.previous_day_number){
+                            //console.log("WRAP AROUND. Week_devices: ", week_devices);
+                            this.add_week(week_devices);
+                            
                             first_week_day = true;
+                            
+                            week_devices = {};
+                            week_available_day_number = 1; // does not start at 0
+                            
+                            /*
+                            for (var prop in week_devices) {
+                                if (week_deviceshasOwnProperty(prop)) {
+                                    delete week_devices[prop];
+                                }
+                            }
+                            */
                         }
                         
                         this.previous_day_number = current_day_number
@@ -322,15 +357,15 @@
                         
                         
                         if(first_week_day){
-                            
+                            //console.log('first week day');
                             last_week_start_epoch = timestamp;
                             
                             const this_week_total_kwh = week_total_kwh - previous_week_total_kwh;
                             
                             // TODO: could indicate if energy use increased or decreased compared to last week, e.g. with a percentage
-                            var week_total_el = document.createElement('div')
+                            var week_total_el = document.createElement('div');
                             week_total_el.setAttribute("class", "extension-energyuse-week-total");
-                            week_total_el.innerHTML = '<span class="extension-energyuse-week-total-start-date">' + week_start_date_string + '</span><span class="extension-energyuse-week-total-kwh">' + this_week_total_kwh.toFixed(2) + '<pan>';
+                            week_total_el.innerHTML = '<span class="extension-energyuse-week-total-start-date">' + week_start_date_string + '</span><span class="extension-energyuse-week-total-kwh">' + this.rounder(this_week_total_kwh) + '<pan>';
                             week_container.append(week_total_el);
                             
                             // Create start date string for next week's total
@@ -340,8 +375,8 @@
                             previous_week_total_kwh = week_total_kwh;
                             
                             
-                            list.prepend(week_container);
-                            week_container = document.createElement('div')
+                            //list.prepend(week_container);
+                            week_container = document.createElement('div');
                             week_container.setAttribute("class", "extension-energyuse-week-container");
                             
                         }
@@ -353,10 +388,12 @@
                     
                     const day_names = ['sun','mon','tue','wed','thu','fri','sat'];
                     
+                    let date_string = "" + date.getDate() + "/" + (date.getMonth()+1);
                     clone.getElementsByClassName("extension-energyuse-item-date")[0].innerHTML = '<span class="extension-energyuse-item-day-name">' + day_names[current_day_number] + '</span><span class="extension-energyuse-item-date">' + date.getDate()+"/"+(date.getMonth()+1 + '</span>');
                     
                     
                     const day = items[timestamp];
+                    //console.log('day raw: ', day);
                     
                     day_total = 0;
                     device_count = 0;
@@ -364,6 +401,8 @@
                     for (const device_id in day) {
                         if (day.hasOwnProperty(device_id)) {
                             //console.log(" -- device_id: ", device_id);
+                            const title = this.get_title(device_id);
+                            //console.log(" -- device title: ", title);
                             
                             var prev_value = day[device_id];
                             var current_value = day[device_id];
@@ -372,32 +411,54 @@
                             if(typeof previous_value[device_id] != 'undefined'){
                                 prev_value = previous_value[device_id];
                                 delta = current_value - prev_value;
+                                
+                                if(typeof week_devices[device_id] == 'undefined'){
+                                    week_devices[device_id] = {'device_id':device_id, 'title':title, 'was_used':false, 'week_available_days':week_available_day_number, 'days':[] };
+                                }
+                                
+                                if(delta != 0){
+                                    week_devices[device_id]['was_used'] = true;
+                                    if(week_available_day_number > week_devices['week_available_days']){
+                                        week_devices['week_available_days'] = week_available_day_number; // keep track of the maximum number of available days in this week
+                                    }
+                                    
+                                    // Also store this per-device. Why not.
+                                    week_devices[device_id]['week_available_days'] = week_available_day_number;
+                                    
+                                }
+                                
+                                week_devices[device_id]['days'].push( {'week_available_day_number':week_available_day_number,'day_name':day_names[current_day_number], 'date':date_string, 'absolute':current_value, 'relative':delta} );
+                                
+                                
+                                
+                                //week_devices[device_id] = {'device_id':device_id, 'title':title  ,'week_available_day_number':week_available_day_number, 'absolute':current_value, 'relative':delta};
+                                //console.log("week_devices: ", week_devices);
                             }
-                            previous_value[device_id] = day[device_id]; // remember what the value was today, so the difference with the next can be calculated
+                            previous_value[device_id] = day[device_id]; // remember what the value was today, so the difference with the next day can be calculated
                             
                             day_total += delta;
                             
         					var devel = document.createElement("div");
         					devel.setAttribute("class", "extension-energyuse-item-stack-device");
-                            var ael = document.createElement("a");
-                            ael.href = '/things/' + device_id;
-                            const title = this.get_title(device_id);
+                            var a_el = document.createElement("a");
+                            a_el.href = '/things/' + device_id;
+                            //const title = this.get_title(device_id);
                             
                             //var title_span = document.createElement("span");
                             var title_t = document.createTextNode(title);
-                            ael.appendChild(title_t);
+                            a_el.appendChild(title_t);
                             
                             var kwh_span = document.createElement("span");
-        					var kwh_t = document.createTextNode(delta.toFixed(2)); //   + "KWh"
+        					var kwh_t = document.createTextNode(this.rounder(delta)); //   + "KWh"
                             kwh_span.appendChild(kwh_t);
                             
                             
-        					//ael.appendChild(title_span);
+        					//a_el.appendChild(title_span);
                             if(current_day_number == 0){
                                 
                             }
                             
-                            devel.appendChild(ael);
+                            devel.appendChild(a_el);
                             devel.appendChild(kwh_span);
                             
                             // To protect privacy, only show device details if the date is less than X days away from today (maximum 12 weeks)
@@ -425,18 +486,20 @@
                     if(items_counter == total_items_count){
                         //console.log("arrived at last day recorded (likely yesterday)");
                         
+                        this.add_week(week_devices);
+                        
                         week_total_kwh = week_total_kwh + day_total;
                         const this_week_total_kwh = week_total_kwh - previous_week_total_kwh;
                         
                         clone.classList.add("extension-energyuse-item-today");
                         week_container.append(clone);
                         
-                        var week_total_el = document.createElement('div')
+                        var week_total_el = document.createElement('div');
                         week_total_el.setAttribute("class", "extension-energyuse-week-total");
-                        week_total_el.innerHTML = '<span class="extension-energyuse-week-total-start-date">' + week_start_date_string + '</span><span class="extension-energyuse-week-total-kwh">' + this_week_total_kwh.toFixed(2) + '<pan>';
+                        week_total_el.innerHTML = '<span class="extension-energyuse-week-total-start-date">' + week_start_date_string + '</span><span class="extension-energyuse-week-total-kwh">' + this.rounder(this_week_total_kwh) + '<pan>';
                         week_container.append(week_total_el);
                         
-                        list.prepend(week_container);
+                        //list.prepend(week_container);
                     }
                     else{
                         //console.log("setting clone to ready_clone");
@@ -450,25 +513,204 @@
 				console.log("Error in regenerate_items: ", e);
 			}
 		}
-	
     
-        /*
-        // Copy to clipboard
-        clip(element_id) {
-            var range = document.createRange();
-            range.selectNode(document.getElementById(element_id));
-            window.getSelection().removeAllRanges(); // clear current selection
-            window.getSelection().addRange(range); // to select text
-            document.execCommand("copy");
-            window.getSelection().removeAllRanges();// to deselect
-            alert("Copied song name to clipboard");
+        
+        
+        
+        
+        add_week(week){
+            console.log("IN ADD WEEK", week);
+            
+            let at_least_one_device_was_used = false;
+            
+            let header_html = "";
+            let footer_html = "";
+            
+            let day_kwh_totals = new Array(0,0,0,0,0,0,0,0); // total energy use per day
+            let date_strings = new Array('8');
+            let week_total = 0;
+            
+            let week_el = document.createElement('div');
+            week_el.setAttribute("class", "extension-energyuse-week-container");
+            
+            let output = "";
+            
+            for (const device_id in week) {
+                
+                let device = week[device_id];
+                
+                //console.log("device: ", device_id);
+                //console.log("device-> was_used: ", device['was_used']);
+                
+                if(device['was_used'] == true){
+                    
+                    at_least_one_device_was_used = true;
+                    
+                    let device_id = device['device_id'];
+                    console.log("device_id: " + device_id);
+                    output += "<tr>";
+                    output += '<td class="extension-energyuse-device-title">' + device['title'] + '</td>';
+                    
+                    
+                    let device_kwh_total = 0;
+                    
+                    let start_kwh = null;
+                    let end_kwh = null;
+                    
+                    
+                    
+                    for(let d = 1; d < 8; d++){
+                    
+                        let was_used_today = false;
+                        let today_data = {};
+                        
+                        output += '<td class="extension-energyuse-device-day-use">';
+                        
+                        for(let e = 0; e < device['days'].length; e++){
+                            
+                            if(e == 0 && start_kwh == null){
+                                start_kwh = device['days'][e]['absolute'];
+                            }
+                            if(e == device['days'].length-1 && end_kwh == null){
+                                end_kwh = device['days'][e]['absolute'];
+                            }
+                            
+                            if(d == device['days'][e]['week_available_day_number']){
+                                was_used_today = true;
+                                today_data = device['days'][e];
+                                break;
+                            }
+                        }
+                        
+                        if(was_used_today){
+                            //console.log(device['title'] + " was used today. Day data:", today_data);
+                            device_kwh_total = device_kwh_total + today_data['relative'];
+                            //console.log("device_kwh_total by relative addition: ", device_kwh_total);
+                            
+                            output += this.rounder(today_data['relative']);
+                            
+                            date_strings[d] = '<span class="th-day-name">' + today_data['day_name'] + '</span><br/><span class="th-day-date">' + today_data['date'] + '</span>';
+                            
+                            device_kwh_total = device_kwh_total + today_data['relative'];
+                            day_kwh_totals[d] = day_kwh_totals[d] + today_data['relative'];
+                            //console.log("day_kwh_totals[d]: ", day_kwh_totals[d] );
+                            
+                        }
+                        
+                        
+                        output += '</td>';
+                        
+                        
+                    }
+                    
+                    console.log(device['title'] + " start and end kwh: ", start_kwh, end_kwh);
+                    
+                    let device_total = null;
+                    if(start_kwh != null && end_kwh != null){
+                        device_total = end_kwh - start_kwh;
+                        week_total = week_total + device_total;
+                    }
+                    output += '<td class="extension-energyuse-device-total extension-energyuse-column-total">' + this.rounder(device_kwh_total) + '</td><tr>'; // device_total.toFixed(2)
+                    
+                }
+                else{
+                    console.log("skipping device that was not used this week");
+                }
+                
+                
+            }
+            
+            if(at_least_one_device_was_used){
+                console.log("at least one device was used");
+                header_html += '<tr class="extension-energyuse-th"><th class="extension-energyuse-device-title">Device</th>';
+                for(let d = 1; d < 8; d++){
+                    header_html += '<th class="extension-energyuse-th-day-' + d + '">';
+                    if(typeof date_strings[d] != 'undefined'){
+                        header_html += date_strings[d];
+                    }
+                    header_html += '</th>';
+                }
+                header_html += '<th class="extension-energyuse-device-total extension-energyuse-column-total"></th></tr>';
+                //console.log("header_html: " , header_html);
+                output = header_html + output;
+                
+                
+                footer_html += '<tr class="extension-energyuse-sums"><td class="extension-energyuse-nothing"></td>';
+                for(let d = 1; d < 8; d++){
+                    footer_html += '<td class="extension-energyuse-day-sum-' + d + '">';
+                    if(day_kwh_totals[d] > 0){
+                        footer_html += this.rounder(day_kwh_totals[d]);
+                    }
+                    footer_html +='</td>';
+                }
+                footer_html += '<td class="extension-energyuse-week-total extension-energyuse-column-total">' + this.rounder(week_total) + '</td></tr>';
+                //console.log("footer_html: " , footer_html);
+                
+                output += footer_html;
+                
+            }
+            else{
+                //console.log("No devices used any power?");
+                output += "<tr><td></td></tr>";
+            }
+            
+            output = '<table>' + output + '</table>';
+            
+            
+            week_el.innerHTML = output;
+            
+            document.getElementById('extension-energyuse-list').prepend(week_el);
+            
+            
         }
-        */
+    
+    
+    
+    
+        rounder(value){
+            if(value > 0){
+                let return_string = "" + value.toFixed(2);
+                if(return_string == "0.00"){
+                    if(value.toFixed(3) == "0.000"){
+                        return_string = "";
+                    }
+                }
+                
+                if(return_string.startsWith("0.")){
+                    return_string = return_string.substring(1);
+                }
+                
+                return return_string;
+            }
+            else{
+                return "";
+            }
+        }
+    
     
     }
 
 	new Energyuse();
 	
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

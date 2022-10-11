@@ -107,11 +107,32 @@ class EnergyUseAPIHandler(APIHandler):
                           content=json.dumps({'persistent':self.adapter.persistent_data,'debug':self.adapter.DEBUG}),
                         )
                         
+                    
+                    if action == 'save_token':
+                        if self.DEBUG:
+                            print("in save_token")
+                        
+                        token_saved = False
+                        
+                        if len(str(request.body['jwt'])) > 10:
+                            self.adapter.persistent_data['token'] = str(request.body['jwt']) 
+                            self.adapter.save_persistent_data()
+                            token_saved = True
+                        else:
+                            if self.DEBUG:
+                                print("Error, token was too short?")
+                        
+                        return APIResponse(
+                          status=200,
+                          content_type='application/json',
+                          content=json.dumps({"state":token_saved}),
+                        )
+                        
                     else:
                         return APIResponse(
-                            status=500,
+                            status=404,
                             content_type='application/json',
-                            content=json.dumps("API error"),
+                            content=json.dumps({"Error":"Unknown api command"}),
                         )
                         
                 except Exception as ex:
@@ -120,7 +141,7 @@ class EnergyUseAPIHandler(APIHandler):
                     return APIResponse(
                         status=500,
                         content_type='application/json',
-                        content=json.dumps("Error in API handler"),
+                        content=json.dumps({"Error":"Error in API handler"}),
                     )
                     
             else:

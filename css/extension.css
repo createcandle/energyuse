@@ -12,14 +12,17 @@
 	top: 7.6rem;
 	left: 0;
 	padding: 2rem;
+    box-sizing:border-box;
+}
+
+#extension-energyuse-view * {
+    box-sizing:border-box;
 }
 
 
 #extension-energyuse-content {
-	display:flex;
-	flex-direction: column;
-	flex-direction: column;
-	overflow: auto;
+	/*display:flex;
+	flex-direction: column;*/
   	position: relative;
   	text-align: left;
   	font-size: 1.6rem;
@@ -56,7 +59,7 @@
     background-repeat: no-repeat;
     background-position: 0;
     background-image: url('../images/menu-icon.svg');
-	width:12rem;
+	width:15rem;
 	margin:0 auto;
 }
 
@@ -66,21 +69,22 @@
 
 
 #extension-energyuse-tabs-container{
-    display:flex;
+    /*display:flex;
     align-items:center;
     justify-content:center;
-    flex-direction:column;
+    flex-direction:column;*/
+    max-width:100rem;
+    margin: 2rem auto;
 }
 
 #extension-energyuse-tabs-container > div{
-    padding:2rem;
+    /*padding:2rem;*/
 }
 
 
 #extension-energyuse-list{
 	width:auto;
 	display:flex;
-    overflow-x:scroll;
     flex-direction:column;
 }
 
@@ -159,8 +163,8 @@
     width:100%;
     padding:2rem 0;
     margin-bottom:2rem;
-    display:flex;
-    flex-wrap:wrap;
+    /*display:flex;
+    flex-wrap:wrap;*/
 }
 .extension-energyuse-item-show-device-names,
 .extension-energyuse-week-container > .extension-energyuse-item:first-of-type{
@@ -287,7 +291,7 @@
 
 
 
-
+/*
 .extension-energyuse-week-total{
     width:100%;
     text-align:right;
@@ -299,6 +303,7 @@
     background-color:rgba(0,0,0,.1);
     border-radius:.5rem;
 }
+*/
 .extension-energyuse-week-total-kwh:before{
     content:'Week total: ';
     opacity:.3;
@@ -443,6 +448,71 @@
 
 
 
+
+
+
+/*  TABLES  */
+
+
+table{
+    width:100%;
+    border: 2rem solid transparent;
+}
+th:not(:empty),
+td:not(:empty){
+    padding:.2rem;
+    vertical-align: bottom;
+}
+
+.extension-energyuse-sums td:not(.extension-energyuse-nothing){
+    border-top:1px dotted rgba(255,255,255,.5);
+    font-style:italic;
+}
+
+td.extension-energyuse-column-total{
+    border-left:1px dotted rgba(255,255,255,.5);
+    font-style:italic;
+    padding-left:1rem;
+}
+
+th[class^="extension-energyuse-th-day-"] {
+    border-bottom:1px dotted rgba(255,255,255,.5);
+}
+
+td[class^="extension-energyuse-day-sum-"] {
+    padding-bottom:1rem;
+}
+
+
+.extension-energyuse-device-day-use,
+#extension-energyuse-list > div:first-of-type > table .extension-energyuse-device-day-use{
+    min-width:2.5rem;
+}
+
+
+
+.extension-energyuse-device-title{
+    width:20%;
+}
+
+.extension-energyuse-column-total{
+    width:10%;
+}
+
+
+.extension-energyuse-week-total{
+    font-size: 3rem;
+    font-weight: bold;
+    padding: 1rem;
+    background-color:rgba(0,0,0,.1);
+    border-radius:.5rem;
+}
+
+
+
+
+
+
 /*  spinner  */
 
 .extension-privacy-manager-spinner {
@@ -523,20 +593,27 @@
 	}
 }
 
+@media screen and (min-width: 801px) {
+    th:not(:empty),
+    td:not(:empty){
+        padding:.5rem;
+    }
+}
+
 
 @media screen and (min-width: 1025px) {
 	#extension-energyuse-view{
 		left:9.6rem;
 		top: 0;
 		height:100vh; 
-		position:absolute;
+		/*position:absolute;
 		width: calc(100% - 9.6rem);
-		padding-right:9.6rem;
+		padding-right:9.6rem;*/
 	}
 	
 	#extension-energyuse-content-container{
 		height:auto;
-		width: calc(100% - 3rem);
+		/*width: calc(100% - 3rem);*/
 	}
 	
 	/*
