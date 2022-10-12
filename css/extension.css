@@ -464,10 +464,12 @@ td:not(:empty){
     vertical-align: bottom;
 }
 
+/*
 .extension-energyuse-sums td:not(.extension-energyuse-nothing){
     border-top:1px dotted rgba(255,255,255,.5);
     font-style:italic;
 }
+*/
 
 td.extension-energyuse-column-total{
     border-left:1px dotted rgba(255,255,255,.5);
@@ -479,8 +481,9 @@ th[class^="extension-energyuse-th-day-"] {
     border-bottom:1px dotted rgba(255,255,255,.5);
 }
 
-td[class^="extension-energyuse-day-sum-"] {
+body td[class^="extension-energyuse-day-sum-"] {
     padding-bottom:1rem;
+    font-style:italic;
 }
 
 
@@ -508,6 +511,11 @@ td[class^="extension-energyuse-day-sum-"] {
     border-radius:.5rem;
 }
 
+
+tr:not(.extension-energyuse-th) + tr.extension-energyuse-sums td:not(.extension-energyuse-nothing){
+    border-top:1px dotted rgba(255,255,255,.5);
+    font-style:italic;
+}
 
 
 
