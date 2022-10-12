@@ -6,6 +6,8 @@
       		
 			this.addMenuEntry('Energy use');
 			
+            this.debug = false;
+            
             this.all_things = {};
             
             this.only_show_week_total = false;
@@ -177,7 +179,7 @@
                         //console.log('no token present yet');
                         document.getElementById('extension-energyuse-missing-token').style.display = 'block';
                     }
-                    this.regenerate_items(this.persistent_data.energy);
+                    
                     
                     if(typeof body.debug != 'undefined'){
                         if(body.debug){
@@ -195,6 +197,7 @@
                         }
                     }
                     
+                    this.regenerate_items(this.persistent_data.energy);
 					
 				
 		        }).catch((e) => {
@@ -219,7 +222,9 @@
     
 		regenerate_items(items, page){
 			try {
-				console.log("regenerating. items: ", items);
+				if(this.debug){
+                    console.log("regenerating. items: ", items);
+                }
 		
 				const pre = document.getElementById('extension-energyuse-response-data');
 				
@@ -236,7 +241,7 @@
                 
                 var previous_date = new Date(0);
                 var previous_timestamp = 0;
-                console.log('previous date at the beginning: ', previous_date );
+                //console.log('previous date at the beginning: ', previous_date );
                 
                 const total_items_count = Object.keys(items).length;
                 
@@ -286,14 +291,22 @@
                 
                 const current_timestamp = Math.round(Date.now() / 1000);
                 const details_threshold_timestamp = current_timestamp - (this.device_detail_days * 86400);
-                console.log("details_threshold_timestamp: ", details_threshold_timestamp);
+                //console.log("details_threshold_timestamp: ", details_threshold_timestamp);
+                var details_threshold_date = new Date((details_threshold_timestamp - 600) * 1000);
+                //console.log("\nDETAILS THRESHOLD DATE: ", details_threshold_date);
                 
                 // Loop over all items
 				for( var timestamp in items ){
                     
-                    console.log("\n\n.");
-                    console.log("TIMESTAMP: " + timestamp);
-                    console.log("(previous_timestamp: ", previous_timestamp);
+                    // Get the date
+                    var date = new Date((timestamp - 600) * 1000); // make sure the timestamp is in the day before
+                    
+                    if(this.debug){
+                        console.log("\n\n.");
+                        console.log("TIMESTAMP: " + timestamp);
+                        console.log("DATE     : ", date);
+                        console.log("(previous_timestamp: ", previous_timestamp);
+                    }
 					var clone = original.cloneNode(true);
 					clone.removeAttribute('id');
                     
@@ -304,14 +317,10 @@
                     }
                     
                     
-                    // Get the date
-                    var date = new Date((timestamp - 600) * 1000); // make sure the timestamp is in the day before
-                    console.log("DATE     : ", date);
                     
-                    if(timestamp > details_threshold_timestamp){
-                        console.log("setting showing_device_details to TRUE");
-                        showing_device_details = true;
-                    }
+                    //
+                    
+                    
                     //if(timestamp > )
                     
                     // To protect privacy, only show device details if the date is less than X days away from today (maximum 12 weeks)
@@ -326,12 +335,15 @@
                         }
                     }
                     */
-                    console.log("showing_device_details: ", showing_device_details);
+                    //console.log("showing_device_details: ", showing_device_details);
                     
+                    var should_create_new_week = false;
                     if(previous_timestamp != null){
                         //console.log("last_week_start_epoch was not null");
                         if(timestamp - previous_timestamp > 604800){ // 618800000){ // at least a week has passed. Maybe the addon was disabled for a while.
-                            console.log("whoa, at least a week has passed since the last timestamp");
+                            if(this.debug){
+                                console.log("\n\n\n\n\nZZZZ\n\n\n\n\nwhoa, at least a week has passed since the last timestamp");
+                            }
                             should_create_new_week = true;
                             //week_available_day_number = 0;
                         
@@ -343,20 +355,28 @@
                             week_available_day_number = 1; // does not start at 0
                         }
                         else{
-                            console.log('a week has not yet passed');
+                            //console.log('a week has not yet passed');
                         }
                     }
                     
                     
                     
+                    if(timestamp > details_threshold_timestamp){
+                        if(this.debug){
+                            console.log("\nsetting showing_device_details to TRUE <---------------------------------------------\n");
+                        }
+                        showing_device_details = true;
+                    }
                     
-                    var should_create_new_week = false;
+                    
+                    /*
                     if(last_week_start_epoch != null){
                         
                     }
                     else{
                         console.log("last_week_start_epoch was still null");
                     }
+                    */
                     //console.log("week_available_day_number: ", week_available_day_number);
                         
                     
@@ -370,9 +390,10 @@
                     
                     const current_day_number = date.getDay();
                     
-                    if(date.getDate() != previous_date.getDate()){ // && date.getMonth() != previous_date.getMonth()){
-                        console.log("it's a new date");
                     //if( current_day_number != this.previous_day_number){
+                    if(date.getDate() != previous_date.getDate()){ // && date.getMonth() != previous_date.getMonth()){
+                        //console.log("it's a new date");
+                    
                         
                         previous_date = date; // date objects
                         
@@ -382,7 +403,9 @@
                         week_available_day_number++; // may be less than 7 is there is only data for, say, 4 days in this week.
                         
                         if( current_day_number < this.previous_day_number){
-                            console.log("WRAP AROUND. Week_devices: ", week_devices);
+                            if(this.debug){
+                                console.log("WRAP AROUND. Week_devices: ", week_devices);
+                            }
                             this.add_week(week_devices,showing_device_details);
                             
                             first_week_day = true;
@@ -544,8 +567,9 @@
                     //console.log("items_counter: ", items_counter);
                     
                     if(items_counter == total_items_count){
-                        //console.log("arrived at last day recorded (likely yesterday)");
-                        
+                        if(this.debug){
+                            console.log("energy use: arrived at last day recorded (likely yesterday)");
+                        }
                         this.add_week(week_devices,showing_device_details);
                         
                         week_total_kwh = week_total_kwh + day_total;
@@ -581,8 +605,9 @@
         
         
         add_week(week, showing_device_details){
-            console.log("IN ADD WEEK", week);
-            
+            if(this.debug){
+                console.log("energy use: IN ADD WEEK", week);
+            }
             let at_least_one_device_was_used = false;
             
             let header_html = "";
@@ -601,7 +626,9 @@
                 
                 let device = week[device_id];
                 
-                //console.log("device: ", device_id);
+                if(this.debug){
+                    console.log("device: ", device_id);
+                }
                 //console.log("device-> was_used: ", device['was_used']);
                 
                 if(device['was_used'] == true){
@@ -647,9 +674,13 @@
                         }
                         
                         if(was_used_today){
-                            console.log(device['title'] + " was used today. Day data:", today_data);
+                            if(this.debug){
+                                console.log(device['title'] + " was used today. Day data:", today_data);
+                            }
                             device_kwh_total = device_kwh_total + today_data['relative'];
-                            console.log("device_kwh_total by relative addition: ", device_kwh_total);
+                            if(this.debug){
+                                console.log("device_kwh_total by relative addition: ", device_kwh_total);
+                            }
                             
                             if(showing_device_details){
                                 output += this.rounder(today_data['relative']);
@@ -659,8 +690,8 @@
                             
                             //device_kwh_total = device_kwh_total + today_data['relative'];
                             day_kwh_totals[d] = day_kwh_totals[d] + today_data['relative'];
-                            console.log("day_kwh_totals[d]: ", day_kwh_totals[d] );
-                            console.log("day_kwh_totals: ", day_kwh_totals );
+                            //console.log("day_kwh_totals[d]: ", day_kwh_totals[d] );
+                            //console.log("day_kwh_totals: ", day_kwh_totals );
                             
                         }
                         
@@ -671,7 +702,7 @@
                         
                     }
                     
-                    console.log(device['title'] + " start and end kwh: ", start_kwh, end_kwh);
+                    //console.log(device['title'] + " start and end kwh: ", start_kwh, end_kwh);
                     
                     /*
                     let device_total = null;
@@ -688,14 +719,18 @@
                     
                 }
                 else{
-                    console.log("skipping device that was not used this week: ", device['title']);
+                    if(this.debug){
+                        console.log("skipping device that was not used this week: ", device['title']);
+                    }
                 }
                 
                 
             }
             
             if(at_least_one_device_was_used){
-                console.log("at least one device was used");
+                if(this.debug){
+                    console.log("at least one device was used.");
+                }
                 header_html += '<tr class="extension-energyuse-th"><th class="extension-energyuse-device-title">';
                 if(showing_device_details){
                     header_html += 'Device';
