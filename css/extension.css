@@ -454,12 +454,12 @@
 /*  TABLES  */
 
 
-table{
+#extension-energyuse-view table{
     width:100%;
     border: 2rem solid transparent;
 }
-th:not(:empty),
-td:not(:empty){
+#extension-energyuse-view th:not(:empty),
+#extension-energyuse-view td:not(:empty){
     padding:.2rem;
     vertical-align: bottom;
 }
@@ -471,13 +471,13 @@ td:not(:empty){
 }
 */
 
-td.extension-energyuse-column-total{
+#extension-energyuse-view td.extension-energyuse-column-total{
     border-left:1px dotted rgba(255,255,255,.5);
     font-style:italic;
     padding-left:1rem;
 }
 
-th[class^="extension-energyuse-th-day-"] {
+#extension-energyuse-view th[class^="extension-energyuse-th-day-"] {
     border-bottom:1px dotted rgba(255,255,255,.5);
 }
 
@@ -512,7 +512,7 @@ body td[class^="extension-energyuse-day-sum-"] {
 }
 
 
-tr:not(.extension-energyuse-th) + tr.extension-energyuse-sums td:not(.extension-energyuse-nothing){
+#extension-energyuse-view tr:not(.extension-energyuse-th) + tr.extension-energyuse-sums td:not(.extension-energyuse-nothing){
     border-top:1px dotted rgba(255,255,255,.5);
     font-style:italic;
 }
