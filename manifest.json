@@ -1,4 +1,5 @@
 {
+  "type": "object",
   "author": "CandleSmartHome.com",
   "description": "Visualizes the total energy use of your power monitoring devices.",
   "content_scripts": [
@@ -28,6 +29,7 @@
     "default": {
       "Device detail days": 28,
       "Data retention months": 24,
+	  "Hide cost": false,
       "Authorization token": "",
       "Debugging": false
     },
@@ -59,6 +61,10 @@
           ],
           "type": "string"
         },
+        "Hide cost": {
+          "type": "boolean",
+          "description": "Enable this if you want to hide the option to translate KWh values into costs."
+        },
         "Authorization token": {
           "description": "Advanced. To be allowed to get information on all your devices, you have to create an 'authorization' code. It's basically a very long password. You can generate it yourself under Settings -> Developer -> Create local authorization",
           "type": "string"
@@ -73,7 +79,7 @@
     }
   },
   "short_name": "Energy",
-  "version": "0.2.18",
+  "version": "0.2.19",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",

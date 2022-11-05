@@ -128,6 +128,20 @@ class EnergyUseAPIHandler(APIHandler):
                           content=json.dumps({"state":token_saved}),
                         )
                         
+                        
+                    if action == 'save_kwh_price':
+                        if self.DEBUG:
+                            print("in save_kwh_price")
+                        
+                        self.adapter.persistent_data['kwh_price'] = float(request.body['kwh_price'])
+                        self.adapter.save_persistent_data()
+                        
+                        return APIResponse(
+                          status=200,
+                          content_type='application/json',
+                          content=json.dumps({"state":True}),
+                        )
+                        
                     else:
                         return APIResponse(
                             status=404,

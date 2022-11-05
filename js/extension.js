@@ -24,6 +24,9 @@
 
             this.searching = false;
             this.entered_search_page = false;
+            
+            this.showing_cost = true;
+            this.current_energy_price = null;
 
             setTimeout(() => {
                 const jwt = localStorage.getItem('jwt');
@@ -31,9 +34,8 @@
     	        window.API.postJson(
     	          `/extensions/${this.id}/api/ajax`,
     				{'action':'save_token','jwt':jwt}
-
     	        ).then((body) => {
-                    console.log("energy use delayed update jwt response: ", body);
+                    //console.log("energy use delayed update jwt response: ", body);
     	        }).catch((e) => {
     	  			console.log("Error (delayed) saving token: ", e);
     	        });
@@ -104,6 +106,48 @@
                 this.searching = false;
 			});*/
             
+            document.getElementById('extension-energyuse-hide-cost-button').addEventListener('click', (event) => {
+                document.getElementById('extension-energyuse-main-page').classList.remove('show-cost');
+                document.getElementById('extension-energyuse-hide-cost-button').style.display = 'none';
+            });
+            
+            
+            document.getElementById('extension-energyuse-show-cost-button').addEventListener('click', (event) => {
+                console.log("document.getElementById('extension-energyuse-kwh-price').value: ", document.getElementById('extension-energyuse-kwh-price').value);
+                document.getElementById('extension-energyuse-main-page').classList.add('show-cost');
+                
+                document.getElementById('extension-energyuse-hide-cost-button').style.display = 'inline-block';
+                
+                if(document.getElementById('extension-energyuse-kwh-price').value != 0 && document.getElementById('extension-energyuse-kwh-price').value != null){
+                    if(document.getElementById('extension-energyuse-kwh-price').value != 0 && document.getElementById('extension-energyuse-kwh-price').value != this.current_energy_price){
+                        this.current_energy_price = document.getElementById('extension-energyuse-kwh-price').value;
+                        this.start();
+                        
+                        // store the new kwh_price
+            	        window.API.postJson(
+            	          `/extensions/${this.id}/api/ajax`,
+            				{'action':'save_kwh_price','kwh_price':this.current_energy_price}
+
+            	        ).then((body) => {
+                            console.log("energy use save_kwh_price response: ", body);
+            	        }).catch((e) => {
+            	  			console.log("Error saving kwh_price: ", e);
+            	        });
+                        
+                    }
+                    else{
+                        console.log("kwh price was already that value");
+                    }
+                }
+                else{
+                    console.log("kwh price was invalid");
+                    document.getElementById('extension-energyuse-main-page').classList.remove('show-cost');
+                }
+                
+            });
+            
+            
+            
 
             
             this.interval = setInterval(() =>{
@@ -119,13 +163,16 @@
             // start -> get_init_data -> renegerate_items
             
             //console.log("in start");
-    	    API.getThings().then((things) => {
+    	    API.getThings()
+            .then((things) => {
 			
     			this.all_things = things;
                 //console.log("energy use: all things: ", this.all_things);
                 this.get_init_data();
             
-            });
+            }).catch((e) => {
+		  	    console.log("Energy use: error getting things data: ", e);
+		    });
         }
     
     
@@ -197,6 +244,24 @@
                         }
                     }
                     
+                    if(typeof this.persistent_data.hide_cost != 'undefined'){
+                        if(this.persistent_data.hide_cost == true){
+                            this.showing_cost = false;
+                            if(this.debug){
+                                console.log("energy use: not displaying cost option");
+                            }
+                        }
+                        else{
+                            document.getElementById('extension-energyuse-options').style.display = 'flex';
+                        }
+                    }
+                    
+                    if(typeof this.persistent_data.kwh_price != 'undefined'){
+                        this.current_energy_price = this.persistent_data.kwh_price;
+                        document.getElementById('extension-energyuse-kwh-price').value = this.current_energy_price;
+                    }
+                    
+                    
                     this.regenerate_items(this.persistent_data.energy);
 					
 				
@@ -225,7 +290,16 @@
 				if(this.debug){
                     console.log("regenerating. items: ", items);
                 }
-		
+		        
+                /*
+                if(this.show_cost){
+                    document.getElementById('extension-energyuse-main-page').classList.add('show-cost');
+                }
+                else{
+                    document.getElementById('extension-energyuse-main-page').classList.remove('show-cost');
+                }
+                */
+        
 				const pre = document.getElementById('extension-energyuse-response-data');
 				
 				const original = document.getElementById('extension-energyuse-original-item');
@@ -683,8 +757,16 @@
                             }
                             
                             if(showing_device_details){
-                                output += this.rounder(today_data['relative']);
+                                output += '<span class="extension-energyuse-kwh">' + this.rounder(today_data['relative']) + '</span>'; // here the actual kwh value gets added to the html output
+                                
+                                if(this.showing_cost && this.current_energy_price != null){
+                                    output += '<span class="extension-energyuse-cost">' + this.rounder( today_data['relative'] * this.current_energy_price ) + '</span>';
+                                }
                             }
+                            
+                            
+                            
+                            
                             
                             date_strings[d] = '<span class="th-day-name">' + today_data['day_name'] + '</span><br/><span class="th-day-date">' + today_data['date'] + '</span>';
                             
@@ -714,7 +796,14 @@
                     
                     
                     if(showing_device_details){
-                        output += '<td class="extension-energyuse-device-total extension-energyuse-column-total">' + this.rounder(device_kwh_total) + '</td><tr>'; // device_total.toFixed(2)
+                        output += '<td class="extension-energyuse-device-total extension-energyuse-column-total">';
+                        output += '<span class="extension-energyuse-kwh">' + this.rounder(device_kwh_total) + '</span>';
+                        
+                        if(this.showing_cost && this.current_energy_price != null){
+                            output += '<span class="extension-energyuse-cost">' + this.rounder( device_kwh_total * this.current_energy_price ) + '</span>';
+                        }
+                        
+                        output += '</td><tr>'; // device_total.toFixed(2)
                     }
                     
                 }
@@ -727,10 +816,13 @@
                 
             }
             
+            // wrap header and footer around output
             if(at_least_one_device_was_used){
                 if(this.debug){
                     console.log("at least one device was used.");
                 }
+                
+                // add header
                 header_html += '<tr class="extension-energyuse-th"><th class="extension-energyuse-device-title">';
                 if(showing_device_details){
                     header_html += 'Device';
@@ -748,15 +840,24 @@
                 //console.log("header_html: " , header_html);
                 output = header_html + output;
                 
+                // add footer
                 footer_html += '<tr class="extension-energyuse-sums"><td class="extension-energyuse-nothing"></td>';
                 for(let d = 1; d < 8; d++){
                     footer_html += '<td class="extension-energyuse-day-sum-' + d + '">';
                     if(day_kwh_totals[d] > 0){
-                        footer_html += this.rounder(day_kwh_totals[d]);
+                        footer_html += '<span class="extension-energyuse-kwh">' + this.rounder(day_kwh_totals[d]) + '</span>';
+                        if(this.showing_cost && this.current_energy_price != null){
+                            footer_html += '<span class="extension-energyuse-cost">' + this.rounder( day_kwh_totals[d] * this.current_energy_price ) + '</span>';
+                        }
                     }
                     footer_html +='</td>';
                 }
-                footer_html += '<td class="extension-energyuse-week-total extension-energyuse-column-total">' + this.rounder(week_total) + '</td></tr>';
+                footer_html += '<td class="extension-energyuse-week-total extension-energyuse-column-total">';
+                footer_html += '<span class="extension-energyuse-kwh">' + this.rounder(week_total) + '</span>';
+                if(this.showing_cost && this.current_energy_price != null){
+                    footer_html += '<span class="extension-energyuse-cost">' + this.rounder( week_total * this.current_energy_price ) + '</span>';
+                }
+                footer_html += '</td></tr>';
                 //console.log("footer_html: " , footer_html);
                 
                 output += footer_html;

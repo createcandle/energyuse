@@ -107,6 +107,12 @@ class EnergyUseAdapter(Adapter):
 
         if not 'previous_hour_day_delta' in self.persistent_data:
             self.persistent_data['previous_hour_day_delta'] = None
+            
+        if not 'kwh_price' in self.persistent_data:
+            self.persistent_data['kwh_price'] = None
+        
+        if not 'hide_cost' in self.persistent_data:
+            self.persistent_data['hide_cost'] = False
 
         if 'previous_hour' in self.persistent_data:
             #print("setting previous_hour from persistent data: " + str(self.persistent_data['previous_hour'])) # TODO: do this using the last timestamp instead, to be very sure that the addon was restarted quickly, and not hours or days later.
@@ -194,6 +200,8 @@ class EnergyUseAdapter(Adapter):
         try:
             if 'Device detail days' in config:
                 self.persistent_data['device_detail_days'] = int(config['Device detail days'])
+                if self.DEBUG:
+                    print("Device detail days preference was in config. It's now: " + str(self.persistent_data['device_detail_days']))
         except Exception as ex:
             print("Error loading device detail days from settings: " + str(ex))
         
@@ -201,9 +209,16 @@ class EnergyUseAdapter(Adapter):
         try:
             if 'Data retention months' in config:
                 self.persistent_data['data_retention_months'] = int(config['Data retention months'])
+                if self.DEBUG:
+                    print("Data retention months preference was in config. It's now: " + str(self.persistent_data['data_retention_months']))
         except Exception as ex:
             print("Error loading data retention from settings: " + str(ex))
 
+        if 'Hide cost' in config:
+            #print("-Debugging was in config")
+            self.persistent_data['hide_cost'] = bool(config['Hide cost'])
+            if self.DEBUG:
+                print("Hide cost preference was in config. It's now: " + str(self.persistent_data['hide_cost']))
 
         if 'Debugging' in config:
             #print("-Debugging was in config")
@@ -365,7 +380,7 @@ class EnergyUseAdapter(Adapter):
                     if 'EnergyMonitor' in thing['@type']:
                         thing_id = str(thing['id'].rsplit('/', 1)[-1])
                         if self.DEBUG:
-                            print("energy monitor device spotted: " + str(thing_id ))
+                            print("\nenergy monitor device spotted: " + str(thing_id) )
                         #print("thing = "  + str(thing))
                         #print("thing_id = "  + str(thing_id))
                         #new_simple_things[thing_id] = []
@@ -375,19 +390,23 @@ class EnergyUseAdapter(Adapter):
                             if self.DEBUG:
                                 print("-properties was in thing")
                                 #print(thing['properties'])
-                                print(json.dumps(thing['properties'], indent=4))
-                                
+                                #print(json.dumps(thing['properties'], indent=4))
+                            
+                            energy_property_found = False
+                            
                             for proppy in thing['properties']:
                                 if self.DEBUG:
                                     print("proppy: " + str(proppy))
                                 
                                 if 'title' in thing['properties'][proppy]:
                                     if thing['properties'][proppy]['title'].lower() == 'energy':
+                                        energy_property_found = True
                                         try:
                                             thing_property_key = proppy #'energy'
                                             if self.DEBUG:
                                                 print("--energy property: ", thing['properties'][thing_property_key])
                                     
+                                            
                                             device_count += 1
                                     
                                             if store_data:
@@ -407,15 +426,15 @@ class EnergyUseAdapter(Adapter):
                                             try:
                                                 if 'forms' in thing['properties'][thing_property_key]:
                                                     if len(thing['properties'][thing_property_key]['forms']) > 0:
-                                                        if self.DEBUG:
-                                                            print("forms")
+                                                        #if self.DEBUG:
+                                                        #    print("forms")
                                                         property_href = thing['properties'][thing_property_key]['forms'][0]['href']
                                         
                                                 if property_href == "":
                                                     if 'links' in thing['properties'][thing_property_key]:
                                                         if len(thing['properties'][thing_property_key]['links']) > 0:
-                                                            if self.DEBUG:
-                                                                print("links")
+                                                            #if self.DEBUG:
+                                                            #    print("links")
                                                             property_href = thing['properties'][thing_property_key]['links'][0]['href']
 
                                                 if property_href == "":
@@ -430,7 +449,7 @@ class EnergyUseAdapter(Adapter):
                                             if self.DEBUG:
                                                 print("href: " + str(property_href))
                                 
-                                            if property_href != "":
+                                            if property_href != "" and property_href != None:
                                                 #print("property_href = " + str(property_href))
                                                 property_result = self.api_get(property_href)
                                                 if self.DEBUG:
@@ -441,7 +460,7 @@ class EnergyUseAdapter(Adapter):
                                                 if property_result != None:
                                                     if hasattr(property_result, 'error') or 'error' in property_result:
                                                         if self.DEBUG:
-                                                            print("get property value: get_api returned an error.")
+                                                            print("get property value: get_api returned an error. Trying again in 10 seconds...")
                                                         api_error_count += 1
                                                 
                                                         # try again
@@ -454,7 +473,7 @@ class EnergyUseAdapter(Adapter):
                                                     
                                                     else:
                                                         if self.DEBUG:
-                                                            print("api call was ok")
+                                                            print("api call went ok")
                                                         if property_href != None:
                                                             property_id = property_href.rsplit('/', 1)[-1]
                                                             if property_id in property_result:
@@ -525,7 +544,7 @@ class EnergyUseAdapter(Adapter):
                                                         
                                                                         else:
                                                                             if self.DEBUG:
-                                                                                print("That previous time was not in the data somehow.")
+                                                                                print("Warning, that previous time was not in the data somehow.")
                                                     
                                                                     else:
                                                                         if self.DEBUG:
@@ -533,16 +552,20 @@ class EnergyUseAdapter(Adapter):
                                                 
                                                                 except Exception as ex:
                                                                     print("Error comparing to previous time: " + str(ex))
-                                                    
+                                                else:
+                                                    if self.DEBUG:
+                                                        print("Error, api returned None as the energy property value")
+                                                        
                                         except Exception as ex:
                                             print("Error while looping over energy property: " + str(ex))
                                     
                                 else:
                                     if self.DEBUG:
                                         print("Error, property has no title?")                   
-                            else:
+                            
+                            if energy_property_found == False:
                                 if self.DEBUG:
-                                    print("that's odd, there was no property called energy in this energy monitoring device")
+                                    print("that's odd, there was no property called energy in this energy monitoring device: " + str(thing_id))
             
             
             if device_count > 0 and device_count == api_error_count:
@@ -599,7 +622,7 @@ class EnergyUseAdapter(Adapter):
                             if self.DEBUG:
                                 print("hour-delta. day_delta: " + str(day_delta))
                                 print("hour-delta. self.persistent_data['previous_hour_day_delta']: " + str(self.persistent_data['previous_hour_day_delta']))
-                            if day_delta > self.persistent_data['previous_hour_day_delta']:
+                            if day_delta >= self.persistent_data['previous_hour_day_delta']:
                                 if self.DEBUG:
                                     print("day delta was bigger than the previous hour, so should update hourly use property on thing")
                                 hourly_delta = day_delta - self.persistent_data['previous_hour_day_delta']

@@ -507,7 +507,7 @@ body td[class^="extension-energyuse-day-sum-"] {
     font-size: 3rem;
     font-weight: bold;
     padding: 1rem;
-    background-color:rgba(0,0,0,.1);
+    /*background-color:rgba(0,0,0,.1);*/
     border-radius:.5rem;
 }
 
@@ -519,6 +519,56 @@ body td[class^="extension-energyuse-day-sum-"] {
 
 
 
+/* show costs  */
+
+#extension-energyuse-options{
+    /*display:flex;*/
+    display:none;
+    justify-content:center;
+    align-items:center;
+    background-color:rgba(255,255,255,.1);
+    border-radius:.5rem;
+    padding:2rem;
+}
+
+.extension-energyuse-cost{
+    display:inline-block;
+    background-color:rgba(255,255,255,.7);
+    border-radius:.5rem;
+    padding:0 .3rem;
+    color:black;
+    margin-left:.5rem;
+}
+.extension-energyuse-column-total .extension-energyuse-cost{
+    padding:0 .7rem 0 .1rem;
+}
+
+/*
+.extension-energyuse-cost:not(:empty)::before{
+    content:'🪙';
+}
+*/
+
+
+
+#extension-energyuse-main-page.show-cost .extension-energyuse-kwh{
+    display:none;
+}
+
+#extension-energyuse-main-page:not(.show-cost) .extension-energyuse-cost{
+    display:none;
+}
+
+#extension-energyuse-kwh-price{
+    border: none;
+    padding: 1.6rem 1rem;
+    border-radius: 0.5rem;
+    width: 15rem;
+}
+    
+#extension-energyuse-show-cost-button{
+    margin-right:1rem;
+}
 
 
 /*  spinner  */
@@ -634,4 +684,16 @@ body td[class^="extension-energyuse-day-sum-"] {
 	
 }
 
+
+
+@media screen and (max-width: 1024px) {
+    #extension-energyuse-main-page.show-cost .extension-energyuse-kwh{
+        display:none;
+    }
+    
+    #extension-energyuse-kwh-price{
+        width: 8rem;
+    }
+    
+}
 
