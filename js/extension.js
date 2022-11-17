@@ -28,6 +28,9 @@
             this.showing_cost = true;
             this.current_energy_price = null;
 
+            this.device_details = {};
+            this.show_wattage_details = false;
+
             setTimeout(() => {
                 const jwt = localStorage.getItem('jwt');
                 //console.log("jwt: ", jwt);
@@ -63,6 +66,7 @@
 			
             try{
 				clearInterval(this.interval);
+                clearInterval(this.wattage_interval);
 			}
 			catch(e){
 				//console.log("no interval to clear? ", e);
@@ -84,7 +88,6 @@
 				//console.log("no interval to clear?: ", e);
 			}
             
-			
 			const main_view = document.getElementById('extension-energyuse-view');
 			
 			if(this.content == ''){
@@ -107,11 +110,18 @@
 			});*/
             
             
+            
+            document.getElementById('extension-energyuse-wattage-container').addEventListener('click', (event) => {
+                this.show_wattage_details = !this.show_wattage_details;
+                this.generate_wattage_details();
+            });
+            
+            /*
             document.getElementById('extension-energyuse-hide-cost-button').addEventListener('click', (event) => {
                 document.getElementById('extension-energyuse-main-page').classList.remove('show-cost');
                 document.getElementById('extension-energyuse-hide-cost-button').style.display = 'none';
             });
-            
+            */
             
             document.getElementById('extension-energyuse-show-cost-button').addEventListener('click', (event) => {
                 console.log("document.getElementById('extension-energyuse-kwh-price').value: ", document.getElementById('extension-energyuse-kwh-price').value);
@@ -175,9 +185,15 @@
             },1200000); // 1200000 = update the display every 20 minutes
             
             this.start();
+            
+            // get wattage interval
+            this.interval = setInterval(() =>{
+                this.get_wattage();
+            },10000);
 		}   
 		
 	
+    
         start(){
             
             // start -> get_init_data -> renegerate_items
@@ -218,6 +234,147 @@
                 console.log("Energy Use: get_title: Error looping over things: ", e);
             }
 			return thing_title;
+        }
+        
+        
+        
+        get_wattage(){
+            if(this.debug){
+                //console.log("in get_wattage");
+            }
+            var total_wattage = 0;
+            try{
+    			for (let key in this.all_things){
+
+                    if( this.all_things[key].hasOwnProperty('properties') ){
+                        
+                        if(this.debug){
+                            //console.log( this.all_things[key]['title'] );
+                            //console.log( this.all_things[key]['properties'] );
+                        }
+                        
+                        for (let property_key in this.all_things[key]['properties'] ){
+                            
+                            
+                            if( this.all_things[key]['properties'][property_key].hasOwnProperty('@type') ){
+                                //console.log("has title : ", this.all_things[key]['properties'][property_key]['title'].toLowerCase() );
+                                if( this.all_things[key]['properties'][property_key]['@type'] == "InstantaneousPowerProperty"){ // .endsWith("/" + device_id) 
+                				    if(this.debug){
+                                        //console.log("device has InstantaneousPowerProperty");
+                                        //console.log('device: ', this.all_things[key]);
+                                        //console.log("prop: ", property_key );
+                                        //console.log(this.all_things[key]['properties'][property_key]);
+                                    }
+                                    
+                                    var property_href = "";
+                                    
+                                    if(this.all_things[key]['properties'][property_key].hasOwnProperty('forms')){
+                                        if(this.all_things[key]['properties'][property_key]['forms'].length > 0){
+                                            if(this.all_things[key]['properties'][property_key]['forms'][0].hasOwnProperty('href')){
+                                                property_href = this.all_things[key]['properties'][property_key]['forms'][0]['href'];
+                                            }
+                                        }
+                                        
+                                        if(this.debug){
+                                            //console.log("power use: property had forms[0]href: ", property_href );
+                                        }
+                                    }
+                                    
+                                    if( property_href == "" && this.all_things[key].hasOwnProperty('href') && this.all_things[key]['properties'][property_key].hasOwnProperty('name')){
+                                        property_href = this.all_things[key]['href'] + '/properties/' + this.all_things[key]['properties'][property_key]['name'];
+                                        if(this.debug){
+                                            //console.log("power use: constructed property href: ", property_href );
+                                        }
+                                    }
+                                    
+                                    var device_title = 'Unknown';
+                                    if(this.all_things[key].hasOwnProperty('title')){
+                                        device_title = this.all_things[key]['title'];
+                                    }
+                                    
+                                    if(property_href != ""){
+                                        API.getJson( property_href )
+                                        .then((prop) => {
+                                            
+                                            if(this.debug){
+                                                //console.log("WATT: ", device_title, prop);
+                                            }
+                                            const parsed_wattage = parseFloat(prop);
+                                            if(typeof( parsed_wattage ) == 'number'){
+                                                total_wattage += parsed_wattage;
+                                                if(this.debug){
+                                                    //console.log("this.all_things[key]['title']: ", this.all_things[key]['title']);
+                                                }
+                                                
+                                                if(typeof this.device_details[ this.all_things[key]['title'] ] == 'undefined'){
+                                                    this.device_details[ this.all_things[key]['title'] ] = {};
+                                                    //this.device_details[device_title]['wattages'] = []; // TODO: show small graph?
+                                                }
+                                                //this.device_details[ this.all_things[key]['title'] ] = {};
+                                                this.device_details[ this.all_things[key]['title'] ]['wattage'] = parsed_wattage;
+                                                
+                                                if(this.show_wattage_details){
+                                                    this.generate_wattage_details();
+                                                }
+                                                
+                                                
+                                            }
+                                            if(total_wattage >= 10){
+                                                document.getElementById('extension-energyuse-wattage').innerText = Math.round(total_wattage);
+                                            }
+                                            else{
+                                                document.getElementById('extension-energyuse-wattage').innerText = this.rounder(total_wattage);
+                                            }
+                                            
+                                        }).catch((e) => {
+                                            console.log("energy use: get_wattage: error getting wattage from device: ", e);
+                                        });
+                                    }
+                                    else{
+                                        console.log("WARNING, could not get valid href for instantanious power property: ", this.all_things[key]['properties'][property_key]);
+                                    }
+                                    
+                                    //break; // avoids hypothetical situation with multiple instantenous power properties on one device
+                                }
+                            }
+                        }
+                        
+                    }
+                    else{
+                        console.log("Energy use: spotted a thing without properties?");
+                    }
+                }
+            }
+            catch(e){
+                console.log("Energy Use: get_wattage error: ", e);
+            }
+        }
+        
+        
+        generate_wattage_details(){
+            if(this.debug){
+                console.log("in generate_wattage_details");
+            }
+            
+            let wattage_details_el = document.getElementById('extension-energyuse-wattage-details');
+            wattage_details_el.innerHTML = "";
+            wattage_details_el.style.display = 'block';
+            
+            if(this.show_wattage_details){
+                var keys = Object.keys(this.device_details);
+                //console.log('keys: ', keys);
+                keys.sort(); 
+                for(let w = 0; w < keys.length; w++){
+                    const title = keys[w];
+                    //console.log('title: ', title);
+                    const device_el = document.createElement('div');
+                
+                    device_el.innerHTML = '<span class="extension-energyuse-wattage-device-title">' + title + '</span><span class="extension-energyuse-wattage-device-value">' + this.device_details[title].wattage + '</span>';
+                
+                    wattage_details_el.appendChild(device_el);
+                }
+            }
+            
         }
         
         
@@ -284,6 +441,7 @@
                     
                     this.regenerate_items(this.persistent_data.energy);
 					
+                    this.get_wattage();
 				
 		        }).catch((e) => {
 		  			console.log("Error getting Energyuse init data: ", e);
@@ -297,14 +455,14 @@
         }
     
     
+    
+    
+    
 	
 		//
-		//  REGENERATE ITEMS
+		//  REGENERATE ENERGY USE OVERVIEW
 		//
 	
-    
-    
-    
 		regenerate_items(items, page){
 			try {
 				if(this.debug){
@@ -347,7 +505,7 @@
                     list.innerHTML = "";
                 }
                 
-                
+                                
                 var previous_value = {}
                 
                 var ready_clone = null;
@@ -699,247 +857,292 @@
         
         
         add_week(week, showing_device_details){
-            if(this.debug){
-                console.log("energy use: IN ADD WEEK", week);
-            }
-            let at_least_one_device_was_used = false;
-            
-            let header_html = "";
-            let footer_html = "";
-            
-            let day_kwh_totals = new Array(0,0,0,0,0,0,0,0); // total energy use per day
-            let date_strings = new Array('8');
-            let week_total = 0;
-            
-            let week_el = document.createElement('div');
-            week_el.setAttribute("class", "extension-energyuse-week-container");
-            
-            let output = "";
-            
-            let days_in_the_week = 0; // how many days of data does this week have? Ideally 7, but in it might be less (e.g. in the current week, or with sporadic device use).
-            
-            for (const device_id in week) {
-                
-                let device = week[device_id];
-                
+            try{
                 if(this.debug){
-                    console.log("device: ", device_id);
+                    console.log("energy use: IN ADD WEEK", week);
                 }
-                //console.log("device-> was_used: ", device['was_used']);
+                let at_least_one_device_was_used = false;
+            
+                let header_html = "";
+                let footer_html = "";
+            
+                let day_kwh_totals = new Array(0,0,0,0,0,0,0,0); // total energy use per day
+                let date_strings = new Array('8');
+                let week_total = 0;
+            
+                let week_el = document.createElement('div');
+                week_el.setAttribute("class", "extension-energyuse-week-container");
+            
+                let output = "";
+            
+                let days_in_the_week = 0; // how many days of data does this week have? Ideally 7, but in it might be less (e.g. in the current week, or with sporadic device use).
+            
+            
+                var week_device_titles = [];
+                for (const device_id in week) {
+                    week_device_titles.push(week[device_id]['title']);
+                }
                 
-                if(device['was_used'] == true){
+                week_device_titles.sort();
+                console.log('sorted week_keys: ', week_device_titles);
+                
+                for (const sorted_device_title in week_device_titles) {
+                    console.log("sorted_device_title: ", week_device_titles[sorted_device_title]);
                     
-                    at_least_one_device_was_used = true;
-                    
-                    let device_id = device['device_id'];
-                    //console.log("device_id: " + device_id);
-                    if(showing_device_details){
-                        output += "<tr>";
-                        output += '<td class="extension-energyuse-device-title"><a href="/things/' + device_id + '">' + device['title'] + '</a></td>';
-                    }
-                    
-                    let device_kwh_total = 0;
-                    
-                    let start_kwh = null;
-                    let end_kwh = null;
-                    
-                    let days_used = 0;
-                    
-                    
-                    for(let d = 1; d < 8; d++){
-                    
-                        let was_used_today = false;
-                        let today_data = {};
+                    for (const device_id in week) {
+                        console.log("device_id in week: ", device_id);
+                        console.log("week[device_id]['title']: ", week[device_id]['title']);
                         
-                        if(showing_device_details){
-                            output += '<td class="extension-energyuse-device-day-use">';
-                        }
-                        for(let e = 0; e < device['days'].length; e++){
-                            
-                            if(e == 0 && start_kwh == null){
-                                start_kwh = device['days'][e]['absolute'];
+                        if(week[device_id]['title'] == week_device_titles[sorted_device_title]){
+                            console.log("BINGO");
+                            //let device_id = week_keys[w];
+                            console.log(device_id);
+                
+                            let device = week[device_id];
+                
+                            if(this.debug){
+                                console.log("device: ", device_id);
                             }
-                            if(e == device['days'].length-1 && end_kwh == null){
-                                end_kwh = device['days'][e]['absolute'];
-                            }
-                            
-                            if(d == device['days'][e]['week_available_day_number']){
-                                was_used_today = true;
-                                today_data = device['days'][e];
-                                break;
-                            }
-                        }
+                            //console.log("device-> was_used: ", device['was_used']);
+                
+                            if(device['was_used'] == true){
+                    
+                                at_least_one_device_was_used = true;
+                    
+                                let device_id = device['device_id'];
+                                //console.log("device_id: " + device_id);
+                                if(showing_device_details){
+                                    output += '<tr class="extension-energyuse-device-tr">';
+                                    output += '<td class="extension-energyuse-device-title"><a href="/things/' + device_id + '">' + device['title'] + '</a></td>';
+                                }
+                    
+                                let device_kwh_total = 0;
+                    
+                                let start_kwh = null;
+                                let end_kwh = null;
+                    
+                                let days_used = 0;
+                    
+                    
+                                for(let d = 1; d < 8; d++){
+                    
+                                    let was_used_today = false;
+                                    let today_data = {};
                         
-                        if(was_used_today){
-                            days_used++;
+                                    if(showing_device_details){
+                                        output += '<td class="extension-energyuse-device-day-use">';
+                                    }
+                                    for(let e = 0; e < device['days'].length; e++){
                             
-                            if(days_used > days_in_the_week){
-                                days_in_the_week = days_used;
-                            }
+                                        if(e == 0 && start_kwh == null){
+                                            start_kwh = device['days'][e]['absolute'];
+                                        }
+                                        if(e == device['days'].length-1 && end_kwh == null){
+                                            end_kwh = device['days'][e]['absolute'];
+                                        }
                             
-                            if(this.debug){
-                                console.log(device['title'] + " was used today. Day data:", today_data);
-                            }
-                            device_kwh_total = device_kwh_total + today_data['relative'];
-                            if(this.debug){
-                                console.log("device_kwh_total by relative addition: ", device_kwh_total);
-                            }
+                                        if(d == device['days'][e]['week_available_day_number']){
+                                            was_used_today = true;
+                                            today_data = device['days'][e];
+                                            break;
+                                        }
+                                    }
+                        
+                                    if(was_used_today){
+                                        days_used++;
                             
-                            if(showing_device_details){
-                                output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(today_data['relative']) + '</span>'; // here the actual kwh value gets added to the html output
+                                        if(days_used > days_in_the_week){
+                                            days_in_the_week = days_used;
+                                        }
+                            
+                                        if(this.debug){
+                                            console.log(device['title'] + " was used today. Day data:", today_data);
+                                        }
+                                        device_kwh_total = device_kwh_total + today_data['relative'];
+                                        if(this.debug){
+                                            console.log("device_kwh_total by relative addition: ", device_kwh_total);
+                                        }
+                            
+                                        if(showing_device_details){
+                                            output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(today_data['relative']) + '</span>'; // here the actual kwh value gets added to the html output
                                 
-                                if(this.showing_cost && this.current_energy_price != null){
-                                    output += '<span class="extension-energyuse-cost">' + this.rounder( today_data['relative'] * this.current_energy_price ) + '</span>';
+                                            if(this.showing_cost && this.current_energy_price != null){
+                                                output += '<span class="extension-energyuse-cost">' + this.rounder( today_data['relative'] * this.current_energy_price ) + '</span>';
+                                            }
+                                        }
+                            
+                            
+                            
+                            
+                            
+                                        date_strings[d] = '<span class="th-day-name">' + today_data['day_name'] + '</span><br/><span class="th-day-date">' + today_data['date'] + '</span>';
+                            
+                                        //device_kwh_total = device_kwh_total + today_data['relative'];
+                                        day_kwh_totals[d] = day_kwh_totals[d] + today_data['relative'];
+                                        //console.log("day_kwh_totals[d]: ", day_kwh_totals[d] );
+                                        //console.log("day_kwh_totals: ", day_kwh_totals );
+                            
+                                    }
+                        
+                                    if(showing_device_details){
+                                        output += '</td>';
+                                    }
+                        
+                        
+                                }
+                    
+                                //console.log(device['title'] + " start and end kwh: ", start_kwh, end_kwh);
+                    
+                                /*
+                                let device_total = null;
+                                if(start_kwh != null && end_kwh != null){
+                                    device_total = end_kwh - start_kwh;  
+                                }
+                                */
+                                week_total = week_total + device_kwh_total;
+                    
+                    
+                                if(showing_device_details){
+                                    output += '<td class="extension-energyuse-device-total extension-energyuse-column-total">';
+                                    output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(device_kwh_total) + '</span>';
+                        
+                                    if(this.showing_cost && this.current_energy_price != null){
+                                        output += '<span class="extension-energyuse-cost">' + this.rounder( device_kwh_total * this.current_energy_price ) + '</span>';
+                                    }
+                        
+                                    // Yearly extrapolation
+                                    //const average_per_day = week_total / days_used;
+                                    //const yearly_kwh_prediction = average_per_day * 365;
+                                    const yearly_kwh_prediction = week_total * 52.17857;
+                                    //console.log("average kwh per day: ", average_per_day);
+                                    console.log("yearly_kwh_prediction: ", yearly_kwh_prediction);
+                        
+                        
+                                    output += '<td class="extension-energyuse-device-yearly extension-energyuse-column-yearly">';
+                                    output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(yearly_kwh_prediction) + '</span>';
+                        
+                                    if(this.showing_cost && this.current_energy_price != null){
+                                        output += '<span class="extension-energyuse-cost">' + this.rounder( yearly_kwh_prediction * this.current_energy_price ) + '</span>';
+                                    }
+                        
+                                    output += '</td>';
+                                    output += '<tr>';
+                                }
+                    
+                            }
+                            else{
+                                if(this.debug){
+                                    console.log("skipping device that was not used this week: ", device['title']);
                                 }
                             }
                             
-                            
-                            
-                            
-                            
-                            date_strings[d] = '<span class="th-day-name">' + today_data['day_name'] + '</span><br/><span class="th-day-date">' + today_data['date'] + '</span>';
-                            
-                            //device_kwh_total = device_kwh_total + today_data['relative'];
-                            day_kwh_totals[d] = day_kwh_totals[d] + today_data['relative'];
-                            //console.log("day_kwh_totals[d]: ", day_kwh_totals[d] );
-                            //console.log("day_kwh_totals: ", day_kwh_totals );
-                            
                         }
-                        
-                        if(showing_device_details){
-                            output += '</td>';
-                        }
-                        
-                        
-                    }
-                    
-                    //console.log(device['title'] + " start and end kwh: ", start_kwh, end_kwh);
-                    
-                    /*
-                    let device_total = null;
-                    if(start_kwh != null && end_kwh != null){
-                        device_total = end_kwh - start_kwh;  
-                    }
-                    */
-                    week_total = week_total + device_kwh_total;
-                    
-                    
-                    if(showing_device_details){
-                        output += '<td class="extension-energyuse-device-total extension-energyuse-column-total">';
-                        output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(device_kwh_total) + '</span>';
-                        
-                        if(this.showing_cost && this.current_energy_price != null){
-                            output += '<span class="extension-energyuse-cost">' + this.rounder( device_kwh_total * this.current_energy_price ) + '</span>';
-                        }
-                        
-                        // Yearly extrapolation
-                        //const average_per_day = week_total / days_used;
-                        //const yearly_kwh_prediction = average_per_day * 365;
-                        const yearly_kwh_prediction = week_total * 52.17857;
-                        //console.log("average kwh per day: ", average_per_day);
-                        console.log("yearly_kwh_prediction: ", yearly_kwh_prediction);
-                        
-                        
-                        output += '<td class="extension-energyuse-device-yearly extension-energyuse-column-yearly">';
-                        output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(yearly_kwh_prediction) + '</span>';
-                        
-                        if(this.showing_cost && this.current_energy_price != null){
-                            output += '<span class="extension-energyuse-cost">' + this.rounder( yearly_kwh_prediction * this.current_energy_price ) + '</span>';
-                        }
-                        
-                        output += '</td>';
-                        output += '<tr>';
-                    }
-                    
-                }
-                else{
-                    if(this.debug){
-                        console.log("skipping device that was not used this week: ", device['title']);
                     }
                 }
                 
                 
-            }
+                //week.sort((a, b) => (a.title.toLowerCase() > b.title.toLowerCase()) ? 1 : -1) // sort alphabetically
             
-            // wrap header and footer around output
-            if(at_least_one_device_was_used){
-                if(this.debug){
-                    console.log("at least one device was used.");
-                }
+                //for (const device_id in week) {
+            
+            
+                //var week_keys = Object.keys(week);
+                //week_keys.sort(); 
+                //console.log('sorted week_keys: ', week_keys);
+                //for(let w = 0; w < week_keys.length; w++){
                 
-                // add header
-                header_html += '<tr class="extension-energyuse-th"><th class="extension-energyuse-device-title">';
-                if(showing_device_details){
-                    header_html += 'Device';
-                }
-                header_html += '</th>';
+                    
+            
+                // wrap header and footer around output
+                if(at_least_one_device_was_used){
+                    if(this.debug){
+                        console.log("at least one device was used.");
+                    }
                 
-                for(let d = 1; d < 8; d++){
-                    header_html += '<th class="extension-energyuse-th-day-' + d + '">';
-                    if(typeof date_strings[d] != 'undefined'){
-                        header_html += date_strings[d];
+                    // add header
+                    header_html += '<tr class="extension-energyuse-th"><th class="extension-energyuse-device-title">';
+                    if(showing_device_details){
+                        header_html += 'Device';
                     }
                     header_html += '</th>';
-                }
-                header_html += '<th class="extension-energyuse-device-total extension-energyuse-column-total">Week</th>';
-                header_html += '<th class="extension-energyuse-device-yearly extension-energyuse-column-yearly"><span title="This is an extrapolation based on the average daily use this week">Yearly</span></th>';
                 
-                header_html += '</tr>';
-                //console.log("header_html: " , header_html);
-                output = header_html + output;
-                
-                
-                // add footer
-                footer_html += '<tr class="extension-energyuse-sums"><td class="extension-energyuse-nothing"></td>';
-                for(let d = 1; d < 8; d++){
-                    footer_html += '<td class="extension-energyuse-day-sum-' + d + '">';
-                    if(day_kwh_totals[d] > 0){
-                        footer_html += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(day_kwh_totals[d]) + '</span>';
-                        if(this.showing_cost && this.current_energy_price != null){
-                            footer_html += '<span class="extension-energyuse-cost">' + this.rounder( day_kwh_totals[d] * this.current_energy_price ) + '</span>';
+                    for(let d = 1; d < 8; d++){
+                        header_html += '<th class="extension-energyuse-th-day-' + d + '">';
+                        if(typeof date_strings[d] != 'undefined'){
+                            header_html += date_strings[d];
                         }
+                        header_html += '</th>';
                     }
-                    footer_html +='</td>';
+                    header_html += '<th class="extension-energyuse-device-total extension-energyuse-column-total">Week</th>';
+                    header_html += '<th class="extension-energyuse-device-yearly extension-energyuse-column-yearly"><span title="This is an extrapolation based on this week">Yearly</span></th>';
+                
+                    header_html += '</tr>';
+                    //console.log("header_html: " , header_html);
+                    output = header_html + output;
+                
+                
+                    // add footer
+                    footer_html += '<tr class="extension-energyuse-sums"><td class="extension-energyuse-nothing"></td>';
+                    for(let d = 1; d < 8; d++){
+                        footer_html += '<td class="extension-energyuse-day-sum-' + d + '">';
+                        if(day_kwh_totals[d] > 0){
+                            footer_html += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(day_kwh_totals[d]) + '</span>';
+                            if(this.showing_cost && this.current_energy_price != null){
+                                footer_html += '<span class="extension-energyuse-cost">' + this.rounder( day_kwh_totals[d] * this.current_energy_price ) + '</span>';
+                            }
+                        }
+                        footer_html +='</td>';
+                    }
+                
+                    // Add weekly total column
+                    footer_html += '<td class="extension-energyuse-week-total extension-energyuse-column-total">';
+                    footer_html += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(week_total) + '</span>';
+                    if(this.showing_cost && this.current_energy_price != null){
+                        footer_html += '<span class="extension-energyuse-cost">' + this.rounder( week_total * this.current_energy_price ) + '</span>';
+                    }
+                    footer_html += '</td>';
+                
+                    // Add yearly extrapolation column. Not currently used, could be confusing/overwhelming.
+                    footer_html += '<td class="extension-energyuse-yearly-total extension-energyuse-column-yearly">';
+                    /*
+                    footer_html += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(yearly_total) + '</span>';
+                    if(this.showing_cost && this.current_energy_price != null){
+                        footer_html += '<span class="extension-energyuse-cost">' + this.rounder( yearly_total * this.current_energy_price ) + '</span>';
+                    }
+                    */
+                    footer_html += '</td>';
+                
+                    footer_html += '</tr>';
+                
+                
+                
+                    //console.log("footer_html: " , footer_html);
+                
+                    output += footer_html;
+                
                 }
-                
-                // Add weekly total column
-                footer_html += '<td class="extension-energyuse-week-total extension-energyuse-column-total">';
-                footer_html += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(week_total) + '</span>';
-                if(this.showing_cost && this.current_energy_price != null){
-                    footer_html += '<span class="extension-energyuse-cost">' + this.rounder( week_total * this.current_energy_price ) + '</span>';
+                else{
+                    //console.log("No devices used any power?");
+                    output += "<tr><td></td></tr>";
                 }
-                footer_html += '</td>';
+            
                 
-                // Add yearly extrapolation column. Not currently used, could be confusing/overwhelming.
-                footer_html += '<td class="extension-energyuse-yearly-total extension-energyuse-column-yearly">';
-                /*
-                footer_html += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(yearly_total) + '</span>';
-                if(this.showing_cost && this.current_energy_price != null){
-                    footer_html += '<span class="extension-energyuse-cost">' + this.rounder( yearly_total * this.current_energy_price ) + '</span>';
+                output = '<table>' + output + '</table>';
+            
+                week_el.innerHTML = output;
+                
+                if(showing_device_details){
+                    week_el.classList.add('extension-energyuse-week-has-device-details');
                 }
-                */
-                footer_html += '</td>';
-                
-                footer_html += '</tr>';
-                
-                
-                
-                //console.log("footer_html: " , footer_html);
-                
-                output += footer_html;
-                
+                else{
+                    week_el.classList.add('extension-energyuse-week-no-device-details');
+                }
+            
+                document.getElementById('extension-energyuse-list').prepend(week_el);
             }
-            else{
-                //console.log("No devices used any power?");
-                output += "<tr><td></td></tr>";
+            catch(e){
+                console.log("Error in add_week: ", e);
             }
-            
-            output = '<table>' + output + '</table>';
-            
-            
-            week_el.innerHTML = output;
-            
-            document.getElementById('extension-energyuse-list').prepend(week_el);
             
             
         }

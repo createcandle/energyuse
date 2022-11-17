@@ -14,6 +14,7 @@
             <div id="extension-energyuse-main-page">
                 
                 <div id="extension-energyuse-totals">
+                    
                     <div id="extension-energyuse-grand-total-container">
                         <div class="extension-energyuse-big-number-container">
                             <span id="extension-energyuse-grand-total" class="extension-energyuse-big-number">...</span>
@@ -22,7 +23,22 @@
                         <span class="extension-energyuse-big-number-title" title="This is the total reported by your devices since they started monitoring.">Grand total</span>
                     </div>
                     
+                    <div id="extension-energyuse-wattage-container">
+                        <div class="extension-energyuse-big-number-container">
+                            <span id="extension-energyuse-wattage" class="extension-energyuse-big-number">...</span>
+                            <span class="extension-energyuse-big-unit">Watt</span>
+                        </div>
+                        <span class="extension-energyuse-big-number-title" title="This is the total amount of Watts your devices are currently consuming.">Wattage</span>
+                    </div>
+                    
+                    
+                    
                 </div>
+                
+                <div id="extension-energyuse-wattage-details" style="display:none">
+                    
+                </div>
+                
                 
                 <div id="extension-energyuse-options">
                     <input id="extension-energyuse-kwh-price" type="number" step="0.00001" placeholder="cost per kWh"/>

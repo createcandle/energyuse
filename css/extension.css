@@ -237,6 +237,7 @@
 #extension-energyuse-view a{
 	color:white;
 	font-weight:bold;
+    text-decoration:none;
 }
 
 .extension-energyuse-item a{
@@ -453,10 +454,22 @@
 
 /*  TABLES  */
 
+.extension-energyuse-week-no-device-details .extension-energyuse-device-total.extension-energyuse-column-total{
+    opacity:0;
+}
+
+.extension-energyuse-week-no-device-details .extension-energyuse-device-yearly.extension-energyuse-column-yearly{
+    opacity:0;
+}
+
+.extension-energyuse-show-predictions .extension-energyuse-week-no-device-details .extension-energyuse-device-total.extension-energyuse-column-total{
+    opacity:1;
+}
+
 
 #extension-energyuse-view table{
     width:100%;
-    border: 2rem solid transparent;
+    border-radius:.5rem;
 }
 #extension-energyuse-view th:not(:empty),
 #extension-energyuse-view td:not(:empty){
@@ -464,7 +477,12 @@
     vertical-align: bottom;
 }
 
+
 /*
+.extension-energyuse-th{
+    background:rgba(0,0,0,.1);
+}
+
 .extension-energyuse-sums td:not(.extension-energyuse-nothing){
     border-top:1px dotted rgba(255,255,255,.5);
     font-style:italic;
@@ -492,10 +510,21 @@ body td[class^="extension-energyuse-day-sum-"] {
     min-width:2.5rem;
 }
 
+.extension-energyuse-device-tr:hover{
+    background-color:rgba(0,0,0,.1)
+}
 
 
 .extension-energyuse-device-title{
     width:20%;
+}
+
+#extension-energyuse-view  .extension-energyuse-device-title a:hover{
+    text-decoration:underline;
+}
+
+.extension-energyuse-th .extension-energyuse-device-title{
+    opacity:0;
 }
 
 .extension-energyuse-column-total{
@@ -515,6 +544,11 @@ body td[class^="extension-energyuse-day-sum-"] {
 #extension-energyuse-view tr:not(.extension-energyuse-th) + tr.extension-energyuse-sums td:not(.extension-energyuse-nothing){
     border-top:1px dotted rgba(255,255,255,.5);
     font-style:italic;
+}
+
+
+#extension-energyuse-view .extension-energyuse-device-total.extension-energyuse-column-total{
+    padding-left:1rem;
 }
 
 
@@ -596,6 +630,47 @@ body td[class^="extension-energyuse-day-sum-"] {
 }
 
 
+
+/*  Live Wattage  */
+
+#extension-energyuse-wattage-container{
+    cursor:pointer;
+}
+
+#extension-energyuse-wattage-container .extension-energyuse-big-number-container:hover{
+    background-color: rgba(0,0,0,.3);
+}
+
+#extension-energyuse-wattage-details:not(:empty)::before{
+    content:'Live power consumption';
+    display:block;
+    font-size:2rem;
+    margin-top:2rem;
+    padding:1rem 2rem;
+    background-color:rgba(0,0,0,.1);
+}
+
+#extension-energyuse-wattage-details:not(:empty){
+    background-color:rgba(0,0,0,.1);
+    border-radius:.5rem;
+    max-width: calc(50rem - 2rem);
+    margin:4rem auto;
+}
+
+#extension-energyuse-wattage-details > div{
+    padding:1rem 2rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+#extension-energyuse-wattage-details > div > span{
+    display:inline-block;
+}
+
+#extension-energyuse-wattage-details > div:not(:last-of-type){
+    border-bottom:1px dotted rgba(255,255,255,.2);
+}
 
 
 /*  spinner  */
@@ -724,3 +799,26 @@ body td[class^="extension-energyuse-day-sum-"] {
     
 }
 
+
+@media print {
+    #extension-energyuse-view {
+      	height: auto;
+    	overflow: visible;
+    	position: initial;
+    }
+    
+    #extension-energyuse-debug-warning,
+    #extension-energyuse-options{
+        display:none!important;
+    }
+    
+    .extension-energyuse-week-container table{
+        break-inside: avoid;
+        page-break-inside: avoid;
+        break-after: always;
+        page-break-after: always;
+        page-break-before:always;
+        break-before:always;
+    }
+    
+}
