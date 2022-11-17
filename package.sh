@@ -30,16 +30,12 @@ cd package
 find . -type f \! -name SHA256SUMS -exec shasum --algorithm 256 {} \; >> SHA256SUMS
 cd -
 
+# Make the tarball
 echo "creating archive"
-TARFILE="energyuse-${version}.tgz"
+TARFILE="energyuse-${version}${TARFILE_SUFFIX}.tgz"
 tar czf ${TARFILE} package
 
+echo "creating shasums"
 shasum --algorithm 256 ${TARFILE} > ${TARFILE}.sha256sum
+cat ${TARFILE}.sha256sum
 
-
-#rm -rf SHA256SUMS package
-#sha256sum "internet-radio-${version}.tgz"
-
-#tar czf "energyuse-${version}.tgz" package
-#cat ${TARFILE}.sha256sum
-#sha256sum "internet-radio-${version}.tgz"
