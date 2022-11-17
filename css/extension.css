@@ -567,8 +567,35 @@ body td[class^="extension-energyuse-day-sum-"] {
 }
     
 #extension-energyuse-show-cost-button{
-    margin-right:1rem;
+    margin-right:2rem;
 }
+
+
+
+/*  predictions  */
+
+.extension-energyuse-column-yearly{
+    display:none;
+}
+.extension-energyuse-show-predictions .extension-energyuse-column-yearly{
+    display:table-cell;
+}
+
+#extension-energyuse-show-predictions-button{
+
+}
+.extension-energyuse-column-yearly .extension-energyuse-kwh,
+.extension-energyuse-column-yearly .extension-energyuse-cost{
+    filter: blur(.8px);
+    opacity:.9;
+}
+.extension-energyuse-column-yearly .extension-energyuse-kwh:hover,
+.extension-energyuse-column-yearly .extension-energyuse-cost:hover{
+    filter: blur(0px);
+    opacity:1;
+}
+
+
 
 
 /*  spinner  */

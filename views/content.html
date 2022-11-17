@@ -17,7 +17,7 @@
                     <div id="extension-energyuse-grand-total-container">
                         <div class="extension-energyuse-big-number-container">
                             <span id="extension-energyuse-grand-total" class="extension-energyuse-big-number">...</span>
-                            <span class="extension-energyuse-big-unit">KWh</span>
+                            <span class="extension-energyuse-big-unit">kWh</span>
                         </div>
                         <span class="extension-energyuse-big-number-title" title="This is the total reported by your devices since they started monitoring.">Grand total</span>
                     </div>
@@ -25,9 +25,10 @@
                 </div>
                 
                 <div id="extension-energyuse-options">
-                    <input id="extension-energyuse-kwh-price" type="number" step="0.00001" placeholder="cost per KWh"/>
+                    <input id="extension-energyuse-kwh-price" type="number" step="0.00001" placeholder="cost per kWh"/>
                     <button id="extension-energyuse-show-cost-button" class="text-button">Show cost</button>
                     <button id="extension-energyuse-hide-cost-button" class="text-button" style="display:none">Hide cost</button>
+                    <button id="extension-energyuse-show-predictions-button" class="text-button">Show yearly predictions</button>
                 </div>
                 
                 <div id="extension-energyuse-list">
@@ -43,6 +44,8 @@
                 -->
             </div>
             
+            <div id="extension-energyuse-device-page" style="display:none">
+            </div>
 		
         </div>
         

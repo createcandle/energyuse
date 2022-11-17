@@ -106,6 +106,7 @@
                 this.searching = false;
 			});*/
             
+            
             document.getElementById('extension-energyuse-hide-cost-button').addEventListener('click', (event) => {
                 document.getElementById('extension-energyuse-main-page').classList.remove('show-cost');
                 document.getElementById('extension-energyuse-hide-cost-button').style.display = 'none';
@@ -114,39 +115,58 @@
             
             document.getElementById('extension-energyuse-show-cost-button').addEventListener('click', (event) => {
                 console.log("document.getElementById('extension-energyuse-kwh-price').value: ", document.getElementById('extension-energyuse-kwh-price').value);
-                document.getElementById('extension-energyuse-main-page').classList.add('show-cost');
                 
-                document.getElementById('extension-energyuse-hide-cost-button').style.display = 'inline-block';
                 
-                if(document.getElementById('extension-energyuse-kwh-price').value != 0 && document.getElementById('extension-energyuse-kwh-price').value != null){
-                    if(document.getElementById('extension-energyuse-kwh-price').value != 0 && document.getElementById('extension-energyuse-kwh-price').value != this.current_energy_price){
-                        this.current_energy_price = document.getElementById('extension-energyuse-kwh-price').value;
-                        this.start();
-                        
-                        // store the new kwh_price
-            	        window.API.postJson(
-            	          `/extensions/${this.id}/api/ajax`,
-            				{'action':'save_kwh_price','kwh_price':this.current_energy_price}
-
-            	        ).then((body) => {
-                            console.log("energy use save_kwh_price response: ", body);
-            	        }).catch((e) => {
-            	  			console.log("Error saving kwh_price: ", e);
-            	        });
-                        
-                    }
-                    else{
-                        console.log("kwh price was already that value");
-                    }
-                }
-                else{
-                    console.log("kwh price was invalid");
+                if(document.getElementById('extension-energyuse-main-page').classList.contains('show-cost') ){
+                    document.getElementById('extension-energyuse-show-cost-button').innerText = 'Show cost';
                     document.getElementById('extension-energyuse-main-page').classList.remove('show-cost');
                 }
+                else{
+                    document.getElementById('extension-energyuse-show-cost-button').innerText = 'Hide cost';
+                    document.getElementById('extension-energyuse-main-page').classList.add('show-cost');
+                    
+                    if(document.getElementById('extension-energyuse-kwh-price').value != 0 && document.getElementById('extension-energyuse-kwh-price').value != null){
+                        if(document.getElementById('extension-energyuse-kwh-price').value != 0 && document.getElementById('extension-energyuse-kwh-price').value != this.current_energy_price){
+                            this.current_energy_price = document.getElementById('extension-energyuse-kwh-price').value;
+                            this.start();
+                        
+                            // store the new kwh_price
+                	        window.API.postJson(
+                	          `/extensions/${this.id}/api/ajax`,
+                				{'action':'save_kwh_price','kwh_price':this.current_energy_price}
+
+                	        ).then((body) => {
+                                console.log("energy use save_kwh_price response: ", body);
+                	        }).catch((e) => {
+                	  			console.log("Error saving kwh_price: ", e);
+                	        });
+                        
+                        }
+                        else{
+                            console.log("kwh price was already that value");
+                        }
+                    }
+                    else{
+                        console.log("kwh price was invalid");
+                        document.getElementById('extension-energyuse-main-page').classList.remove('extension-energyuse-show-cost');
+                    }
+                    
+                }
+                
+                
+                
+                //document.getElementById('extension-energyuse-hide-cost-button').style.display = 'inline-block';
+                
+                
                 
             });
             
             
+            // Show predictions button
+            document.getElementById('extension-energyuse-show-predictions-button').addEventListener('click', (event) => {
+                document.getElementById('extension-energyuse-show-predictions-button').style.display = 'none';
+                document.getElementById('extension-energyuse-main-page').classList.add('extension-energyuse-show-predictions');
+            });
             
 
             
@@ -696,6 +716,8 @@
             
             let output = "";
             
+            let days_in_the_week = 0; // how many days of data does this week have? Ideally 7, but in it might be less (e.g. in the current week, or with sporadic device use).
+            
             for (const device_id in week) {
                 
                 let device = week[device_id];
@@ -721,6 +743,7 @@
                     let start_kwh = null;
                     let end_kwh = null;
                     
+                    let days_used = 0;
                     
                     
                     for(let d = 1; d < 8; d++){
@@ -748,6 +771,12 @@
                         }
                         
                         if(was_used_today){
+                            days_used++;
+                            
+                            if(days_used > days_in_the_week){
+                                days_in_the_week = days_used;
+                            }
+                            
                             if(this.debug){
                                 console.log(device['title'] + " was used today. Day data:", today_data);
                             }
@@ -757,7 +786,7 @@
                             }
                             
                             if(showing_device_details){
-                                output += '<span class="extension-energyuse-kwh">' + this.rounder(today_data['relative']) + '</span>'; // here the actual kwh value gets added to the html output
+                                output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(today_data['relative']) + '</span>'; // here the actual kwh value gets added to the html output
                                 
                                 if(this.showing_cost && this.current_energy_price != null){
                                     output += '<span class="extension-energyuse-cost">' + this.rounder( today_data['relative'] * this.current_energy_price ) + '</span>';
@@ -797,13 +826,29 @@
                     
                     if(showing_device_details){
                         output += '<td class="extension-energyuse-device-total extension-energyuse-column-total">';
-                        output += '<span class="extension-energyuse-kwh">' + this.rounder(device_kwh_total) + '</span>';
+                        output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(device_kwh_total) + '</span>';
                         
                         if(this.showing_cost && this.current_energy_price != null){
                             output += '<span class="extension-energyuse-cost">' + this.rounder( device_kwh_total * this.current_energy_price ) + '</span>';
                         }
                         
-                        output += '</td><tr>'; // device_total.toFixed(2)
+                        // Yearly extrapolation
+                        //const average_per_day = week_total / days_used;
+                        //const yearly_kwh_prediction = average_per_day * 365;
+                        const yearly_kwh_prediction = week_total * 52.17857;
+                        //console.log("average kwh per day: ", average_per_day);
+                        console.log("yearly_kwh_prediction: ", yearly_kwh_prediction);
+                        
+                        
+                        output += '<td class="extension-energyuse-device-yearly extension-energyuse-column-yearly">';
+                        output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(yearly_kwh_prediction) + '</span>';
+                        
+                        if(this.showing_cost && this.current_energy_price != null){
+                            output += '<span class="extension-energyuse-cost">' + this.rounder( yearly_kwh_prediction * this.current_energy_price ) + '</span>';
+                        }
+                        
+                        output += '</td>';
+                        output += '<tr>';
                     }
                     
                 }
@@ -836,28 +881,49 @@
                     }
                     header_html += '</th>';
                 }
-                header_html += '<th class="extension-energyuse-device-total extension-energyuse-column-total"></th></tr>';
+                header_html += '<th class="extension-energyuse-device-total extension-energyuse-column-total">Week</th>';
+                header_html += '<th class="extension-energyuse-device-yearly extension-energyuse-column-yearly"><span title="This is an extrapolation based on the average daily use this week">Yearly</span></th>';
+                
+                header_html += '</tr>';
                 //console.log("header_html: " , header_html);
                 output = header_html + output;
+                
                 
                 // add footer
                 footer_html += '<tr class="extension-energyuse-sums"><td class="extension-energyuse-nothing"></td>';
                 for(let d = 1; d < 8; d++){
                     footer_html += '<td class="extension-energyuse-day-sum-' + d + '">';
                     if(day_kwh_totals[d] > 0){
-                        footer_html += '<span class="extension-energyuse-kwh">' + this.rounder(day_kwh_totals[d]) + '</span>';
+                        footer_html += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(day_kwh_totals[d]) + '</span>';
                         if(this.showing_cost && this.current_energy_price != null){
                             footer_html += '<span class="extension-energyuse-cost">' + this.rounder( day_kwh_totals[d] * this.current_energy_price ) + '</span>';
                         }
                     }
                     footer_html +='</td>';
                 }
+                
+                // Add weekly total column
                 footer_html += '<td class="extension-energyuse-week-total extension-energyuse-column-total">';
-                footer_html += '<span class="extension-energyuse-kwh">' + this.rounder(week_total) + '</span>';
+                footer_html += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(week_total) + '</span>';
                 if(this.showing_cost && this.current_energy_price != null){
                     footer_html += '<span class="extension-energyuse-cost">' + this.rounder( week_total * this.current_energy_price ) + '</span>';
                 }
-                footer_html += '</td></tr>';
+                footer_html += '</td>';
+                
+                // Add yearly extrapolation column. Not currently used, could be confusing/overwhelming.
+                footer_html += '<td class="extension-energyuse-yearly-total extension-energyuse-column-yearly">';
+                /*
+                footer_html += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(yearly_total) + '</span>';
+                if(this.showing_cost && this.current_energy_price != null){
+                    footer_html += '<span class="extension-energyuse-cost">' + this.rounder( yearly_total * this.current_energy_price ) + '</span>';
+                }
+                */
+                footer_html += '</td>';
+                
+                footer_html += '</tr>';
+                
+                
+                
                 //console.log("footer_html: " , footer_html);
                 
                 output += footer_html;
