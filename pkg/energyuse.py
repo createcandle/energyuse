@@ -323,6 +323,10 @@ class EnergyUseAdapter(Adapter):
                         print("already busy counting energy, aborting superflous call")
                     return
                 
+                if self.DEBUG:
+                    print("date_object.day: " + str(date_object.day) + ", date_object.hour: " + str(date_object.hour) )
+                    print("last day in persistent: " + str(self.persistent_data['last_day']) + ", last hour in persistent: " + str(self.previous_hour) )
+                    
                 if date_object.day != self.persistent_data['last_day'] and date_object.hour == 0: # or self.test_counter == 3:
                     #self.test_counter = 0
                     
@@ -379,7 +383,11 @@ class EnergyUseAdapter(Adapter):
                         self.get_energy_data(False) # only updates the 'energy use so far today'
                         self.previous_hour = date_object.hour
                     
-                time.sleep(60)
+                else:
+                    if self.DEBUG:
+                        print("No special moment")
+                    
+                
                 #busy_counting = False
                 #self.test_counter += 1
                 #if self.test_counter > 3:
@@ -390,6 +398,7 @@ class EnergyUseAdapter(Adapter):
             except Exception as ex:
                 print("clock error: " + str(ex))
             
+            time.sleep(60)
             busy_counting = False
             
             
@@ -553,7 +562,7 @@ class EnergyUseAdapter(Adapter):
                                             
                                                                             real_total_power += value
                                                                             if self.DEBUG:
-                                                                                print("------ > total_power is now: " + str(total_power))
+                                                                                print("------ > real_total_power is now: " + str(real_total_power))
                                                     
                                                                         else:
                                                                             if self.DEBUG:
@@ -668,6 +677,9 @@ class EnergyUseAdapter(Adapter):
                         #new_simple_things[thing_id] = []
                         #if self.DEBUG:
                         #    print("thing['properties']: " + str(thing['properties']))
+                        
+                        # TODO: more pro-actively skip the EnergyUse device itself
+                        
                         if 'properties' in thing:
                             if self.DEBUG:
                                 print("-properties was in thing")
@@ -779,7 +791,7 @@ class EnergyUseAdapter(Adapter):
                                                     
                                                                 if store_data:
                                                                     # We only store the new values at the end of the day
-                                                                    self.persistent_data['energy'][str(self.self.last_kwh_measurement_time)][thing_id] = round(value, 5) #{'value':value}
+                                                                    self.persistent_data['energy'][str(self.last_kwh_measurement_time)][thing_id] = round(value, 5) #{'value':value}
                                             
                                                                 else:
                                                                     if self.DEBUG:
