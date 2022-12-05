@@ -1,8 +1,14 @@
-<div id="extension-energyuse-content" class="extension-energyuse-show-tab-timers">
+<div id="extension-energyuse-content" class="extension-energyuse-show-tab-overview">
   
     <div id="extension-energyuse-content-container">
         <h3 id="extension-energyuse-title">Energy use</h3>
 
+
+		<div class="extension-energyuse-tab-buttons">
+            <button id="extension-energyuse-tab-button-overview" class="extension-energyuse-main-tab-button extension-energyuse-tab-selected">Overview</button>
+            <button id="extension-energyuse-tab-button-virtual" class="extension-energyuse-main-tab-button">Virtual</button>
+        </div>
+        
         <div id="extension-energyuse-tabs-container">
 
             <!--
@@ -11,7 +17,12 @@
             </div>
             -->
             
-            <div id="extension-energyuse-main-page">
+            
+            
+            
+            
+            
+            <div id="extension-energyuse-overview-page">
                 
                 <div id="extension-energyuse-totals">
                     
@@ -23,14 +34,31 @@
                         <span class="extension-energyuse-big-number-title" title="This is the total reported by your devices since they started monitoring.">Grand total</span>
                     </div>
                     
-                    <div id="extension-energyuse-wattage-container">
+                    
+                    <div id="extension-energyuse-today-so-far-container">
                         <div class="extension-energyuse-big-number-container">
-                            <span id="extension-energyuse-wattage" class="extension-energyuse-big-number">...</span>
-                            <span class="extension-energyuse-big-unit">Watt</span>
+                            <span id="extension-energyuse-today-so-far" class="extension-energyuse-big-number">...</span>
+                            <span class="extension-energyuse-big-unit">kWh</span>
                         </div>
-                        <span class="extension-energyuse-big-number-title" title="This is the total amount of Watts your devices are currently consuming.">Wattage</span>
+                        <span class="extension-energyuse-big-number-title" title="KwH consumed up until the start of the hour.">Today</span>
                     </div>
                     
+                    
+                    <div id="extension-energyuse-real-wattage-container">
+                        <div class="extension-energyuse-big-number-container">
+                            <span id="extension-energyuse-real-wattage" class="extension-energyuse-big-number">...</span>
+                            <span class="extension-energyuse-big-unit">Watt</span>
+                        </div>
+                        <span class="extension-energyuse-big-number-title" title="This is the total amount of Watts your measured devices are currently consuming."><span class="extension-energyuse-show-if-virtual">Real&nbsp;</span>Wattage</span>
+                    </div>
+                    
+                    <div id="extension-energyuse-total-wattage-container" class="extension-energyuse-show-if-virtual">
+                        <div class="extension-energyuse-big-number-container">
+                            <span id="extension-energyuse-total-wattage" class="extension-energyuse-big-number">...</span>
+                            <span class="extension-energyuse-big-unit">Watt</span>
+                        </div>
+                        <span class="extension-energyuse-big-number-title" title="This is the combined amount of Watts your measured devices and virtual devices are currently consuming.">Total Wattage</span>
+                    </div>
                     
                     
                 </div>
@@ -41,10 +69,11 @@
                 
                 
                 <div id="extension-energyuse-options">
-                    <input id="extension-energyuse-kwh-price" type="number" step="0.00001" placeholder="cost per kWh"/>
+                    <input id="extension-energyuse-kwh-price" class="extension-energyuse-number-input" type="number" step="0.00001" placeholder="cost per kWh"/>
                     <button id="extension-energyuse-show-cost-button" class="text-button">Show cost</button>
                     <button id="extension-energyuse-hide-cost-button" class="text-button" style="display:none">Hide cost</button>
                     <button id="extension-energyuse-show-predictions-button" class="text-button">Show yearly predictions</button>
+                    <!--<button id="extension-energyuse-show-virtual-button" class="text-button">Virtual devices</button>-->
                 </div>
                 
                 <div id="extension-energyuse-list">
@@ -60,8 +89,50 @@
                 -->
             </div>
             
-            <div id="extension-energyuse-device-page" style="display:none">
+            
+            <div id="extension-energyuse-virtual-page">
+                <div class="extension-energyuse-centered-page extension-energyuse-vlak">
+                    <h2>Virtual energy measurement</h2>
+                    <p>Some always-on devices consume a consistent amount of electricity every day. Your internet router, for example.</p>
+                    <p>To use smart plugs to measure such very stable consumption would be a bit of a waste. Once you know how much energy a device normally uses, you can create a 'virtual energy measurement devices' instead. Doing so allows you to pretend that the energy consumption of the device is being measured without needing an actual electricity measurement plug.</p>
+                    <p>To add a virtual device, simply provide a name and how much kWh it uses per day.</p>
+                    <h3>Virtual devices</h3>
+                    <div id="extension-energyuse-virtual-list">There are no virtual devices yet.</div>
+                    
+                    <h3>Add virtual device</h3>
+                    
+                    <div class="extension-energyuse-vlak" style="display:flex; flex-wrap:wrap; margin-bottom:1rem;flex-direction:column">
+                        <div style="width:100%;min-width:20rem;box-sizing:border-box;margin-bottom:2rem">
+                            <label>Name</label>
+                            <input id="extension-energyuse-add-virtual-name" class="extension-energyuse-text-input" style="width:100%">
+                        </div>
+                        <div style="width:100%;min-width:10rem; display:flex;">
+                            
+                            <div style="margin-right:2rem">
+                                <label>Kwh per day</label>
+                                <input id="extension-energyuse-add-virtual-kwh" class="extension-energyuse-number-input" type="number" step="0.00001"  style="min-width:10rem;"/>
+                            </div>
+                            
+                            <p style="opacity:.7;font-weight:bold">or</p>
+                           
+                           <div style="margin-left:2rem">
+                               <label>Watt</label>
+                               <input id="extension-energyuse-add-virtual-watt" class="extension-energyuse-number-input" type="number" step="0.1" style="min-width:10rem;"/>
+                           </div>
+                           
+                        </div>
+                    </div>
+                    <div style="text-align:right">
+                        <button id="extension-energyuse-add-virtual-button" class="text-button" style="font-size:2rem">Add</button>
+                    </div>
+                    <div id="extension-energyuse-add-virtual-succeeded">Saved</div>
+                    <div id="extension-energyuse-add-virtual-failed">Could not save</div>
+                        
+                    <p style="opacity:.7; font-style:italic">Note: it will take at least a day for a new virtual device to show up in the data properly.</p>
+                        
+                </div>
             </div>
+            
 		
         </div>
         

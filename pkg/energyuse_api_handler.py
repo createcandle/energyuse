@@ -104,7 +104,7 @@ class EnergyUseAPIHandler(APIHandler):
                         return APIResponse(
                           status=200,
                           content_type='application/json',
-                          content=json.dumps({'persistent':self.adapter.persistent_data,'debug':self.adapter.DEBUG}),
+                          content=json.dumps({'persistent':self.adapter.persistent_data,'debug':self.adapter.DEBUG,'last_hour_time':self.adapter.last_kwh_measurement_time}),
                         )
                         
                     
@@ -140,6 +140,74 @@ class EnergyUseAPIHandler(APIHandler):
                           status=200,
                           content_type='application/json',
                           content=json.dumps({"state":True}),
+                        )
+                        
+                        
+                    if action == 'add_virtual_device':
+                        if self.DEBUG:
+                            print("in add_virtual_device")
+                        
+                        state = True
+                        
+                        if 'name' not in request.body or 'name' not in request.body:
+                            state = False
+                            
+                        else:
+                            if len(str(request.body['name'])) == 0 or len(str(request.body['name'])) > 80:
+                                state = False
+                            if len(request.body['kwh']) == 0:
+                                state = False
+                            elif request.body['kwh'] == 0:
+                                state = False
+                        
+                            if state == True:
+                                self.adapter.persistent_data['virtual'][ str(request.body['name']) ] = {
+                                            "name":str(request.body['name']),
+                                            "kwh":float(request.body['kwh']),
+                                            "created_time":int(time.time())
+                                            }
+                                self.adapter.save_persistent_data()
+                        
+                        return APIResponse(
+                          status=200,
+                          content_type='application/json',
+                          content=json.dumps({"state":state,"virtual":self.adapter.persistent_data['virtual']}),
+                        )
+                        
+                    if action == 'delete_virtual_device':
+                        if self.DEBUG:
+                            print("in delete_virtual_device")
+                        
+                        state = False
+                        
+                        if not 'name' in request.body:
+                            if self.DEBUG:
+                                print("error, missing name parameter, cannot delete virtual item")
+                                
+                        elif not 'virtual' in self.adapter.persistent_data:
+                            if self.DEBUG:
+                                print("error, virtual devices dict not in persistent data somehow")
+                            
+                        else:
+                            if str(request.body['name']) in self.adapter.persistent_data['virtual']:
+                                if 'created_time' in self.adapter.persistent_data['virtual'][ str(request.body['name']) ]:
+                            
+                                    # if the device was created less than a day ago, remove the entire thing.
+                                    if self.adapter.persistent_data['virtual'][ str(request.body['name']) ]['created_time'] > (time.time() - 86400): 
+                                        self.adapter.persistent_data['virtual'].pop( str(request.body['name']) )
+                                    else:
+                                        self.adapter.persistent_data['virtual'][ str(request.body['name']) ]['deleted_time'] = time.time()
+                                    
+                                    state = True
+                                    self.adapter.save_persistent_data()
+                            else:
+                                if self.DEBUG:
+                                    print("error, virtual item not in dict. Already deleted?")
+    
+                        return APIResponse(
+                          status=200,
+                          content_type='application/json',
+                          content=json.dumps({"state":state,"virtual":self.adapter.persistent_data['virtual']}),
                         )
                         
                     else:

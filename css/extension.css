@@ -65,6 +65,99 @@
 
 
 
+
+#extension-energyuse-view label{
+    display:block;
+}
+
+#extension-energyuse-view h3{
+    margin-top:6rem;
+}
+
+#extension-energyuse-view p{
+    line-height: 2.8rem;
+}
+
+
+#extension-energyuse-view input{
+    border: none;
+    padding: 1.6rem 1rem;
+    border-radius: 0.5rem;
+}
+
+#extension-energyuse-view input[type=number]{
+    width:8rem;
+    max-width:8rem;
+}
+
+#extension-energyuse-view input[type=text]{
+    width:auto;
+    max-width:100%;
+}
+
+
+
+
+
+
+/*  MENU  */
+
+
+#extension-energyuse-view button {
+    font-size: 1.6rem;
+    padding: 1rem;
+    border: none;
+}
+
+.extension-energyuse-tab-buttons {
+    background-color: rgba(255,255,255,.1);
+    border-radius: 0.7rem;
+    overflow: hidden;
+    font-size: 0;
+    width:60%;
+    max-width: 60rem;
+    margin: 4rem auto 0 auto;
+    display:flex;
+    
+}
+
+
+#extension-energyuse-view .extension-energyuse-tab-buttons button {
+    background-color: transparent;
+    border-right: 1px solid rgba(0,0,0,.05);
+    color: #eee;
+    cursor: pointer;
+    font-size: 1.8rem;
+    flex-grow:1;
+}
+
+#extension-energyuse-view .extension-energyuse-tab-buttons button:hover{
+    background-color: rgba(0,0,0,0.1);
+    color: white;
+}
+
+body #extension-energyuse-view .extension-energyuse-tab-selected {
+    color: white;
+    background-color: rgba(0,0,0,0.18)!important;
+}
+
+/*
+#extension-energyuse-view .extension-energyuse-tab-buttons button:last-child {
+    float: right;
+}
+*/
+
+#extension-energyuse-virtual-page{
+    display:none;
+}
+
+
+
+
+
+
+
+
 /*  PAGES  */
 
 
@@ -90,8 +183,16 @@
 
 
 
+.extension-energyuse-centered-page{
+    max-width:60rem;
+    margin:0 auto;
+}
 
-
+.extension-energyuse-vlak{
+    background-color:rgba(0,0,0,.15);
+    border-radius:.5rem;
+    padding:1rem;
+}
 
 
 
@@ -519,6 +620,10 @@ body td[class^="extension-energyuse-day-sum-"] {
     width:20%;
 }
 
+.extension-energyuse-device-title:first-letter{
+  text-transform: capitalize
+}
+
 #extension-energyuse-view  .extension-energyuse-device-title a:hover{
     text-decoration:underline;
 }
@@ -585,19 +690,19 @@ body td[class^="extension-energyuse-day-sum-"] {
 
 
 
-#extension-energyuse-main-page.show-cost .extension-energyuse-kwh{
+#extension-energyuse-overview-page.show-cost .extension-energyuse-kwh{
     display:none;
 }
 
-#extension-energyuse-main-page:not(.show-cost) .extension-energyuse-cost{
+#extension-energyuse-overview-page:not(.show-cost) .extension-energyuse-cost{
     display:none;
 }
+
+
 
 #extension-energyuse-kwh-price{
-    border: none;
-    padding: 1.6rem 1rem;
-    border-radius: 0.5rem;
-    width: 15rem;
+    width: 10rem;
+    max-width: 10rem;
 }
     
 #extension-energyuse-show-cost-button{
@@ -618,6 +723,7 @@ body td[class^="extension-energyuse-day-sum-"] {
 #extension-energyuse-show-predictions-button{
 
 }
+
 .extension-energyuse-column-yearly .extension-energyuse-kwh,
 .extension-energyuse-column-yearly .extension-energyuse-cost{
     filter: blur(.8px);
@@ -633,11 +739,13 @@ body td[class^="extension-energyuse-day-sum-"] {
 
 /*  Live Wattage  */
 
-#extension-energyuse-wattage-container{
+#extension-energyuse-real-wattage-container,
+#extension-energyuse-total-wattage-container{
     cursor:pointer;
 }
 
-#extension-energyuse-wattage-container .extension-energyuse-big-number-container:hover{
+#extension-energyuse-real-wattage-container .extension-energyuse-big-number-container:hover,
+#extension-energyuse-total-wattage-container .extension-energyuse-big-number-container:hover{
     background-color: rgba(0,0,0,.3);
 }
 
@@ -671,6 +779,74 @@ body td[class^="extension-energyuse-day-sum-"] {
 #extension-energyuse-wattage-details > div:not(:last-of-type){
     border-bottom:1px dotted rgba(255,255,255,.2);
 }
+
+
+
+
+/*   Virtual devices  */
+
+#extension-energyuse-add-virtual-succeeded{
+    background-color:green;
+    padding:1rem 2rem;
+    text-align:center;
+    border-radius:.5rem;
+    margin: .5rem 0;
+    display:none;
+}
+
+#extension-energyuse-add-virtual-failed{
+    background-color:red;
+    padding:1rem 2rem;
+    text-align:center;
+    border-radius:.5rem;
+    margin: .5rem 0;
+    display:none;
+}
+
+
+.extension-energyuse-virtual-item{
+    background-color:rgba(0,0,0,.1);
+    margin: .5rem 0;
+    padding:1rem 2rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.extension-energyuse-virtual-item-name{
+    font-weight:bold;
+    min-width:20rem;
+}
+
+
+.extension-energyuse-virtual-item-kwh::after{
+    content:' kWh per day';
+}
+
+
+.extension-energyuse-wattage-device-virtual{
+    opacity:.6;
+}
+
+
+.extension-energyuse-wattage-device + .extension-energyuse-wattage-device-virtual{
+    border-top:1px solid rgba(255,255,255,.5);
+}
+
+.extension-energyuse-device-tr-virtual{
+    opacity:.5;
+}
+
+.extension-energyuse-show-if-virtual{
+    display:none;
+}
+
+.extension-energyuse-has-virtual .extension-energyuse-show-if-virtual{
+    display:inline-block;
+}
+
+
+
 
 
 /*  spinner  */
@@ -751,7 +927,16 @@ body td[class^="extension-energyuse-day-sum-"] {
 	.extension-energyuse-line2 > div{
 		width:auto;
 	}
+    
+    .extension-energyuse-vlak{
+        padding:2rem;
+    }
+
+    #extension-energyuse-view button {
+        padding: 1rem 2rem;
+    }
 }
+
 
 @media screen and (min-width: 801px) {
     th:not(:empty),
@@ -776,6 +961,11 @@ body td[class^="extension-energyuse-day-sum-"] {
 		/*width: calc(100% - 3rem);*/
 	}
 	
+    .extension-energyuse-vlak{
+        padding:4rem;
+        border-radius:1rem;
+    }
+    
 	/*
 	.extension-energyuse-item{
 		width: calc(50% - 4rem);
@@ -789,7 +979,7 @@ body td[class^="extension-energyuse-day-sum-"] {
 
 
 @media screen and (max-width: 1024px) {
-    #extension-energyuse-main-page.show-cost .extension-energyuse-kwh{
+    #extension-energyuse-overview-page.show-cost .extension-energyuse-kwh{
         display:none;
     }
     
