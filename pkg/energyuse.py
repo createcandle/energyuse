@@ -588,26 +588,32 @@ class EnergyUseAdapter(Adapter):
                         for virtual in self.persistent_data['virtual']:
                             if self.DEBUG:
                                 print("\nlooping over virtual device: " + str(virtual))
+                                print("-- details: " + str(self.persistent_data['virtual'][virtual]))
                             if 'deleted_time' in self.persistent_data['virtual'][virtual]:
                                 if self.DEBUG:
                                     print("skipping deleted virtual device: " + str(self.persistent_data['virtual'][virtual]))
                             elif 'created_time' in self.persistent_data['virtual'][virtual] and 'kwh' in self.persistent_data['virtual'][virtual]:
                                 if self.persistent_data['virtual'][virtual]['created_time'] < (time.time() - 600): # should be at least five minutes old, to avoid counting devices that are eroneous.
                                     
-                                    virtual_device_power = round(1000 * ( float(self.persistent_data['virtual'][virtual]['kwh']) / 24 ),1)
+                                    virtual_device_power = 1000 * ( float(self.persistent_data['virtual'][virtual]['kwh']) / 24 )
                                     if self.DEBUG:
                                         print("virtual device power: " + str(virtual_device_power))
                                         #print("adding virtual device use power: " + str(self.persistent_data['virtual'][virtual]['kwh']) + ", with used so far today: " + str(device_delta))
                                     virtual_total_power = virtual_total_power + virtual_device_power
-                
+                                else:
+                                    if self.DEBUG:
+                                        print("Skipping virtual devices that was created in the last 10 minutes")
                             else:
                                 if self.DEBUG:
                                     print("Virtual data was (partially) missing?: " + str(self.persistent_data['virtual'][virtual]))
+                                    
+                            if self.DEBUG:
+                                print("new virtual_total_power: " + str(virtual_total_power))
                     
                     
                         # Set the virtual power on the thing
                         #if virtual_total_power > 0:
-                        self.set_value_on_thing('virtual_wattage',virtual_total_power)
+                        self.set_value_on_thing('virtual_wattage',round(virtual_total_power,1))
                         
                         
                         # Set the combined power on the thing
@@ -904,12 +910,15 @@ class EnergyUseAdapter(Adapter):
                             print("skipping deleted virtual device: " + str(self.persistent_data['virtual'][virtual]))
                     elif 'created_time' in self.persistent_data['virtual'][virtual] and 'kwh' in self.persistent_data['virtual'][virtual]:
                         if self.persistent_data['virtual'][virtual]['created_time'] < (time.time() - 600): # should be at least five minutes old, to avoid counting devices that are eroneous.
-                            device_delta = current_hour * ( float(self.persistent_data['virtual'][virtual]['kwh']) / 24 )
+                            virtual_device_delta = current_hour * ( float(self.persistent_data['virtual'][virtual]['kwh']) / 24 )
                             if self.DEBUG:
                                 print("adding virtual device use kWH: " + str(self.persistent_data['virtual'][virtual]['kwh']) + ", with used so far today: " + str(device_delta))
-                            day_delta = day_delta + device_delta
+                            day_delta = day_delta + virtual_device_delta
                 
                             virtual_device_exists = True
+                        else:
+                            if self.DEBUG:
+                                print("Virtual device was created in the last 10 minutes, ignoring for now")
                     else:
                         if self.DEBUG:
                             print("Virtual data was (partially) missing?: " + str(self.persistent_data['virtual'][virtual]))

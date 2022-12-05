@@ -362,7 +362,10 @@
             if(this.debug){
                 //console.log("in get_wattage");
             }
+            
             var total_wattage = 0;
+            
+            const current_timestamp = Math.floor(Date.now() / 1000);
             
             // calculate the total virtual wattage first
             var virtual_wattage = 0;
@@ -371,7 +374,18 @@
                     console.log("adding virtual wattage: ", this.persistent_data.virtual[id]);
                 }
                 const virtual = this.persistent_data.virtual[id];
+                if(typeof virtual.deleted_time != 'undefined'){
+                    if(virtual.deleted_time < current_timestamp){
+                        if(this.debug){
+                            console.log("This virtual device was deleted by this point, so it will be skipped");
+                        }
+                        continue;
+                    }
+                }
                 virtual_wattage = virtual_wattage + ((parseFloat(virtual.kwh) * 1000) / 24);
+                if(this.debug){
+                    console.log("new virtual wattage: ", virtual_wattage);
+                }
             }
             
             this.virtual_wattage = virtual_wattage;
@@ -688,10 +702,19 @@
                         console.log("virtual: ", this.persistent_data.virtual[id]);
                     }
                     
-                    at_least_one_existed = true;
+                    
+                    //self.persistent_data['virtual'][virtual]
+                    
+                    
                     
                     // virtual item data
                     const virtual = this.persistent_data.virtual[id];
+                
+                    if(typeof virtual['deleted_time'] != 'undefined'){
+                        continue;
+                    }
+                
+                    at_least_one_existed = true;
                 
                     // create virtual item container element
                     var virtual_item_el = document.createElement('div');
@@ -726,9 +749,8 @@
                             if(this.debug){
                                 console.log("delete virtual energy measurement device response: ", body);
                             }
-                            if(body.state == true){
-                                
-                            }
+                            //if(body.state == true){    
+                            //}
                         
                             this.persistent_data.virtual = body.virtual;
                         
@@ -1191,12 +1213,12 @@
                             const virtual = this.persistent_data.virtual[id];
                             const virtual_device_id = 'virtual-' + virtual.name;
                             if(this.debug){
-                                console.log("adding virtual device usage. Virtual: ", virtual_device_id, virtual);
+                                console.log("checking virtual device: ", virtual_device_id, virtual);
                             }
                             
                             // TODO? It would be possible to remove the device's "old data" as well by setting the deleted_time to 0. Could be a user option.
-                            if(typeof virtual.deleted_date != 'undefined'){
-                                if(virtual.deleted_date < timestamp){
+                            if(typeof virtual.deleted_time != 'undefined'){
+                                if(virtual.deleted_time < timestamp){
                                     if(this.debug){
                                         console.log("This virtual device was deleted by this point, so it will be skipped");
                                     }
@@ -1226,9 +1248,6 @@
                         }
                         
                     }
-                    
-                    
-                    
                     
                     
                     
