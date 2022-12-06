@@ -147,7 +147,7 @@
             
             /*
             document.getElementById('extension-energyuse-hide-cost-button').addEventListener('click', (event) => {
-                document.getElementById('extension-energyuse-main-page').classList.remove('show-cost');
+                document.getElementById('extension-energyuse-overview-page').classList.remove('show-cost');
                 document.getElementById('extension-energyuse-hide-cost-button').style.display = 'none';
             });
             */
@@ -247,13 +247,13 @@
                 console.log("document.getElementById('extension-energyuse-kwh-price').value: ", document.getElementById('extension-energyuse-kwh-price').value);
                 
                 
-                if(document.getElementById('extension-energyuse-main-page').classList.contains('show-cost') ){
+                if(document.getElementById('extension-energyuse-overview-page').classList.contains('show-cost') ){
                     document.getElementById('extension-energyuse-show-cost-button').innerText = 'Show cost';
-                    document.getElementById('extension-energyuse-main-page').classList.remove('show-cost');
+                    document.getElementById('extension-energyuse-overview-page').classList.remove('show-cost');
                 }
                 else{
                     document.getElementById('extension-energyuse-show-cost-button').innerText = 'Hide cost';
-                    document.getElementById('extension-energyuse-main-page').classList.add('show-cost');
+                    document.getElementById('extension-energyuse-overview-page').classList.add('show-cost');
                     
                     if(document.getElementById('extension-energyuse-kwh-price').value != 0 && document.getElementById('extension-energyuse-kwh-price').value != null){
                         if(document.getElementById('extension-energyuse-kwh-price').value != 0 && document.getElementById('extension-energyuse-kwh-price').value != this.current_energy_price){
@@ -278,7 +278,7 @@
                     }
                     else{
                         console.log("kwh price was invalid");
-                        document.getElementById('extension-energyuse-main-page').classList.remove('extension-energyuse-show-cost');
+                        document.getElementById('extension-energyuse-overview-page').classList.remove('extension-energyuse-show-cost');
                     }
                     
                 }
@@ -295,7 +295,7 @@
             // Show predictions button
             document.getElementById('extension-energyuse-show-predictions-button').addEventListener('click', (event) => {
                 document.getElementById('extension-energyuse-show-predictions-button').style.display = 'none';
-                document.getElementById('extension-energyuse-main-page').classList.add('extension-energyuse-show-predictions');
+                document.getElementById('extension-energyuse-overview-page').classList.add('extension-energyuse-show-predictions');
             });
             
 
@@ -812,10 +812,10 @@
 		        
                 /*
                 if(this.show_cost){
-                    document.getElementById('extension-energyuse-main-page').classList.add('show-cost');
+                    document.getElementById('extension-energyuse-overview-page').classList.add('show-cost');
                 }
                 else{
-                    document.getElementById('extension-energyuse-main-page').classList.remove('show-cost');
+                    document.getElementById('extension-energyuse-overview-page').classList.remove('show-cost');
                 }
                 */
         
