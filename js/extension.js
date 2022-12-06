@@ -97,20 +97,10 @@
 				return;
 			}
 			else{
-				//document.getElementById('extension-energyuse-view')#extension-energyuse-view
 				main_view.innerHTML = this.content;
 			}
 			
 			const list = document.getElementById('extension-energyuse-list');
-				
-            // Back button
-            /*
-            document.getElementById('extension-energyuse-back-button').addEventListener('click', (event) => {
-                document.getElementById('extension-energyuse-search-page').style.display = 'none';
-                document.getElementById('extension-energyuse-stations-page').style.display = 'block';
-                this.get_init_data();
-                this.searching = false;
-			});*/
             
             document.getElementById('extension-energyuse-title').addEventListener('click', (event) => {
                 this.show();
@@ -145,25 +135,6 @@
                 this.generate_wattage_details();
             });
             
-            /*
-            document.getElementById('extension-energyuse-hide-cost-button').addEventListener('click', (event) => {
-                document.getElementById('extension-energyuse-overview-page').classList.remove('show-cost');
-                document.getElementById('extension-energyuse-hide-cost-button').style.display = 'none';
-            });
-            */
-            /*
-            document.getElementById('extension-energyuse-show-virtual-button').addEventListener('click', (event) => {
-                if( document.getElementById('extension-energyuse-virtual-page').style.display == 'block' ){
-                    document.getElementById('extension-energyuse-virtual-page').style.display = 'none';
-                }
-                else{
-                    document.getElementById('extension-energyuse-virtual-page').style.display = 'block';
-                }
-                
-            });
-            */
-            
-            
             document.getElementById('extension-energyuse-add-virtual-button').addEventListener('click', (event) => {
                 document.getElementById('extension-energyuse-add-virtual-button').style.display = 'none';
                 setTimeout(() => {
@@ -191,7 +162,6 @@
                                 document.getElementById('extension-energyuse-add-virtual-button').style.display = 'initial';
                             }, 3000);
                             
-                            
                         }
                         else{
                             document.getElementById('extension-energyuse-add-virtual-failed').style.display = 'block';
@@ -211,7 +181,6 @@
                             }, 100);
                         }
                         
-                        
         	        }).catch((e) => {
         	  			console.log("error adding virtual energy measurement device: ", e);
         	        });
@@ -225,7 +194,6 @@
                 }
             });
             
-            
             document.getElementById('extension-energyuse-add-virtual-watt').addEventListener('keyup', (event) => {
                 console.log("watt value changed: ", event);
                 const kwh_from_watt = (document.getElementById('extension-energyuse-add-virtual-watt').value * 24) / 1000;
@@ -233,15 +201,12 @@
                 document.getElementById('extension-energyuse-add-virtual-kwh').value = Math.round(kwh_from_watt * 10) / 10;
             });
             
-            
             document.getElementById('extension-energyuse-add-virtual-kwh').addEventListener('keyup', (event) => {
                 console.log("kwh value changed: ", event);
                 const watt_from_kwh = (document.getElementById('extension-energyuse-add-virtual-kwh').value * 1000) / 24;
                 console.log("watt_from_kwh: ", watt_from_kwh);
                 document.getElementById('extension-energyuse-add-virtual-watt').value = Math.round(watt_from_kwh * 10) / 10;
             });
-            
-            
             
             document.getElementById('extension-energyuse-show-cost-button').addEventListener('click', (event) => {
                 console.log("document.getElementById('extension-energyuse-kwh-price').value: ", document.getElementById('extension-energyuse-kwh-price').value);
@@ -283,12 +248,6 @@
                     
                 }
                 
-                
-                
-                //document.getElementById('extension-energyuse-hide-cost-button').style.display = 'inline-block';
-                
-                
-                
             });
             
             
@@ -313,11 +272,9 @@
 		}   
 		
 	
-    
+        // Get the things, then call get_init_data
+        // start -> get_init_data -> renegerate_items
         start(){
-            
-            // start -> get_init_data -> renegerate_items
-            
             //console.log("in start");
     	    API.getThings()
             .then((things) => {
@@ -332,32 +289,14 @@
         }
     
     
-        get_title(device_id){
-            var thing_title = 'Unknown';
-            try{
-    			for (let key in this.all_things){
-
-                    if( this.all_things[key].hasOwnProperty('href') ){
-                    
-                        if( this.all_things[key]['href'].endsWith("/" + device_id) ){
-        				
-            				if( this.all_things[key].hasOwnProperty('title') ){
-            					thing_title = this.all_things[key]['title'];
-                                break;
-            				}
-                            
-                        }
-                    }
-                }
-            }
-            catch(e){
-                console.log("Energy Use: get_title: Error looping over things: ", e);
-            }
-			return thing_title;
-        }
         
         
         
+        //
+        //  GET WATTAGE
+        //
+        // Get data from client-side webthings api about how much energy the devices are using at the moment, and show that value in the big circles.
+        // Also creates a dictionary with that data to be used for creating the small table
         get_wattage(){
             if(this.debug){
                 //console.log("in get_wattage");
@@ -389,9 +328,6 @@
             }
             
             this.virtual_wattage = virtual_wattage;
-            
-            
-            
             
             try{
     			for (let key in this.all_things){
@@ -494,11 +430,6 @@
                                                 document.getElementById('extension-energyuse-total-wattage').innerText = this.rounder(this.virtual_wattage + total_wattage);
                                             }
                                             
-                                            
-                                            
-                                            
-                                            
-                                            
                                         }).catch((e) => {
                                             if(this.debug){
                                                 console.error("energy use: get_wattage: error getting wattage from device: ", this.all_things[key]['title'], e);
@@ -526,7 +457,12 @@
         }
         
         
-        // Show live power consumption in a small table
+        
+        
+        //
+        //  GENERATE WATTAGE DETAILS
+        //
+        // Show live power consumption in a small table. Assumes this.device_details has already been created
         generate_wattage_details(){
             if(this.debug){
                 console.log("in generate_wattage_details");
@@ -537,6 +473,7 @@
             wattage_details_el.style.display = 'block';
             
             let combined_wattage = 0;
+            const current_timestamp = Math.floor(Date.now() / 1000);
             
             if(this.show_wattage_details){
                 
@@ -562,8 +499,18 @@
                         console.log("adding virtual wattage: ", this.persistent_data.virtual[id]);
                     }
                     
+                    
                     // virtual item data
                     const virtual = this.persistent_data.virtual[id];
+                    
+                    if(typeof virtual.deleted_time != 'undefined'){
+                        if(virtual.deleted_time < current_timestamp){
+                            if(this.debug){
+                                console.log("This virtual device was deleted by this point, so it will be skipped");
+                            }
+                            continue;
+                        }
+                    }
                     
                     var device_el = document.createElement('div');
                     device_el.classList.add('extension-energyuse-wattage-device-virtual');
@@ -573,13 +520,12 @@
                     
                 }
                 
-                
             }
             
         }
         
         
-    
+        // Get the data stored by the addon
         get_init_data(){
             //console.log('in get_init_data');
 			try{
@@ -688,7 +634,7 @@
         //
         // GENERATE VIRTUAL DEVICES LIST
         //
-    
+        // Used on the virtual devices tab to list the virtual devices
         generate_virtual_list(){
             try{
                 
@@ -698,18 +644,13 @@
                 var at_least_one_existed = false;
                 
                 for( var id in this.persistent_data.virtual ){
-                    if(this.debug){
-                        console.log("virtual: ", this.persistent_data.virtual[id]);
-                    }
-                    
-                    
-                    //self.persistent_data['virtual'][virtual]
-                    
                     
                     
                     // virtual item data
                     const virtual = this.persistent_data.virtual[id];
-                
+                    if(this.debug){
+                        console.log("virtual: ", virtual);
+                    }
                     if(typeof virtual['deleted_time'] != 'undefined'){
                         continue;
                     }
@@ -765,8 +706,6 @@
                         
                     });
                     
-                    
-                    
                     // Add to item
                     virtual_item_el.appendChild(virtual_name_el);
                     virtual_item_el.appendChild(virtual_kwh_el);
@@ -803,7 +742,7 @@
 		//
 		//  REGENERATE ENERGY USE OVERVIEW
 		//
-	
+	    // Takes all the data and turns it into weekly chunks of data to be displayed
 		regenerate_items(items, page){
 			try {
 				if(this.debug){
@@ -855,7 +794,6 @@
                 
                 var showing_device_details = false;
                 //console.log('items:', items);
-                
                 //console.log("items count: ", total_items_count);
                 
                 
@@ -887,120 +825,6 @@
                 const details_threshold_timestamp = current_timestamp - (this.device_detail_days * 86400);
                 //console.log("details_threshold_timestamp: ", details_threshold_timestamp);
                 var details_threshold_date = new Date((details_threshold_timestamp - 600) * 1000);
-                //console.log("\nDETAILS THRESHOLD DATE: ", details_threshold_date);
-                
-                
-                
-                
-                
-                // VIRTUAL
-                
-                // find earliest virtual creation date
-                
-                /*
-                var earliest_virtual_created_time = this.last_hour_time;
-                for( var id in this.persistent_data.virtual ){
-                    const virtual = this.persistent_data.virtual[id];
-                    if(typeof virtual.created_time != "undefined"){
-                        console.log('this virtual device has a created time');
-                        if(virtual.created_time < earliest_virtual_created_time){
-                            earliest_virtual_created_time = virtual.created_time;
-                        }
-                    }
-                }
-                */
-                
-                
-                
-                
-                
-                /*
-                if(typeof week.start_timestamp != 'undefined'){
-                    
-                    // Create virtual data
-    
-                    for( var id in this.persistent_data.virtual ){
-                        if(this.debug){
-                            console.log("adding virtual device usage: ", this.persistent_data.virtual[id]);
-                        }
-                        const virtual = this.persistent_data.virtual[id];
-        
-                        if(typeof virtual.deleted_time != "undefined"){
-                            console.log('this virtual device has a deleted time');
-                        }
-        
-                        for(let d = 1; d < 8; d++){
-        
-                        if(virtual.created_time < this.last_hour_time)
-                        this.last_hour_time
-        
-        
-        
-                        }
-        
-        
-                    }
-    
-    
-    
-                    "z2m-0x84ba20fffe77b643": {
-                        "device_id": "z2m-0x84ba20fffe77b643",
-                        "title": "3D printer",
-                        "was_used": true,
-                        "days": [
-                            {
-                                "week_available_day_number": 2,
-                                "day_name": "tue",
-                                "date": "<span class=\"extension-energyuse-date-number\">21</span><span class=\"extension-energyuse-date-spacer\">/</span><span class=\"extension-energyuse-month-number\">6</span>",
-                                "absolute": 24.19,
-                                "relative": 0.13000000000000256
-                            },
-                            {
-                                "week_available_day_number": 3,
-                                "day_name": "wed",
-                                "date": "<span class=\"extension-energyuse-date-number\">22</span><span class=\"extension-energyuse-date-spacer\">/</span><span class=\"extension-energyuse-month-number\">6</span>",
-                                "absolute": 24.41,
-                                "relative": 0.21999999999999886
-                            },
-                            {
-                                "week_available_day_number": 4,
-                                "day_name": "thu",
-                                "date": "<span class=\"extension-energyuse-date-number\">23</span><span class=\"extension-energyuse-date-spacer\">/</span><span class=\"extension-energyuse-month-number\">6</span>",
-                                "absolute": 24.59,
-                                "relative": 0.17999999999999972
-                            },
-                            {
-                                "week_available_day_number": 5,
-                                "day_name": "fri",
-                                "date": "<span class=\"extension-energyuse-date-number\">24</span><span class=\"extension-energyuse-date-spacer\">/</span><span class=\"extension-energyuse-month-number\">6</span>",
-                                "absolute": 24.74,
-                                "relative": 0.14999999999999858
-                            },
-                            {
-                                "week_available_day_number": 6,
-                                "day_name": "sat",
-                                "date": "<span class=\"extension-energyuse-date-number\">25</span><span class=\"extension-energyuse-date-spacer\">/</span><span class=\"extension-energyuse-month-number\">6</span>",
-                                "absolute": 25.1,
-                                "relative": 0.360000000000003
-                            }
-                        ],
-                        "week_available_days": 6
-                    },
-                    
-                }
-                */
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
                 
                 
                 // Loop over all items
@@ -1024,27 +848,7 @@
                         last_week_start_epoch = timestamp;
                     }
                     
-                    
-                    
-                    //
-                    
-                    
-                    //if(timestamp > )
-                    
-                    // To protect privacy, only show device details if the date is less than X days away from today (maximum 12 weeks)
-                    /*
-                    if( (items_counter + this.device_detail_days) > total_items_count){
-                        clone.getElementsByClassName("extension-energyuse-item-stack")[0].appendChild(devel)
-                        device_count++;
-                        if(!showing_device_details){
-                            showing_device_details = true;
-                            //console.log('showing device details from now on ');
-                            clone.classList.add("extension-energyuse-item-show-device-names");
-                        }
-                    }
-                    */
-                    //console.log("showing_device_details: ", showing_device_details);
-                    
+                    // Figure out when the week ends/starts
                     var should_create_new_week = false;
                     if(previous_timestamp != null){
                         //console.log("last_week_start_epoch was not null");
@@ -1062,14 +866,6 @@
                             week_devices = {'start_timestamp':timestamp};
                             week_available_day_number = 1; // does not start at 0
                             
-                            
-                            
-                            
-                            
-                            
-                        }
-                        else{
-                            //console.log('a week has not yet passed');
                         }
                     }
                     
@@ -1083,19 +879,7 @@
                     }
                     
                     
-                    /*
-                    if(last_week_start_epoch != null){
-                        
-                    }
-                    else{
-                        console.log("last_week_start_epoch was still null");
-                    }
-                    */
-                    //console.log("week_available_day_number: ", week_available_day_number);
-                        
-                    
-                    
-                    
+                   
                     //console.log("date in day before: ", date);
                     
                     if(week_start_date_string == null){
@@ -1379,7 +1163,10 @@
         
         
         
-        
+        //
+        //  ADD WEEK
+        //
+        // Turns week data into HTML and adds it to the page
         add_week(week, showing_device_details){
             try{
                 if(this.debug){
@@ -1579,81 +1366,6 @@
                         }
                     }
                 }
-                
-                
-                
-                // VIRTUAL ATTEMPT 1
-                /*
-                for( var id in this.persistent_data.virtual ){
-                    if(this.debug){
-                        console.log("adding virtual device usage: ", this.persistent_data.virtual[id]);
-                    }
-                    
-                    output += '<tr class="extension-energyuse-device-tr">';
-                    output += '<td class="extension-energyuse-device-title"><a href="/things/' + device_id + '">' + device['title'] + '</a></td>';
-               
-                    
-                    for(let d = 1; d < 8; d++){
-                        
-                        output += '<td class="extension-energyuse-device-day-use">';
-                        
-                        output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(today_data['relative']) + '</span>'; // here the actual kwh value gets added to the html output
-            
-                        if(this.showing_cost && this.current_energy_price != null){
-                            output += '<span class="extension-energyuse-cost">' + this.rounder( today_data['relative'] * this.current_energy_price ) + '</span>';
-                        }
-                        
-                    }
-                    
-                    output += '<td class="extension-energyuse-device-total extension-energyuse-column-total">';
-                    output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(device_kwh_total) + '</span>';
-        
-                    if(this.showing_cost && this.current_energy_price != null){
-                        output += '<span class="extension-energyuse-cost">' + this.rounder( device_kwh_total * this.current_energy_price ) + '</span>';
-                    }
-                    
-                    const yearly_kwh_prediction = device_kwh_total * 52.17857;
-                    console.log("virtual yearly_kwh_prediction: ", yearly_kwh_prediction);
-        
-                    output += '<td class="extension-energyuse-device-yearly extension-energyuse-column-yearly">';
-                    output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(yearly_kwh_prediction) + '</span>';
-        
-                    if(this.showing_cost && this.current_energy_price != null){
-                        output += '<span class="extension-energyuse-cost">' + this.rounder( yearly_kwh_prediction * this.current_energy_price ) + '</span>';
-                    }
-        
-                    output += '</td>';
-                    output += '<tr>';
-                    
-                    
-                    
-                    // virtual item data
-                    const virtual = this.persistent_data.virtual[id];
-                    
-                    var device_el = document.createElement('div');
-                    device_el.classList.add('extension-energyuse-wattage-device-virtual');
-                    device_el.innerHTML = '<span class="extension-energyuse-wattage-device-title">' + virtual.name + '</span><span class="extension-energyuse-wattage-device-value">' + this.rounder((parseFloat(virtual.kwh) * 1000) / 24) + '</span>';
-                    
-                    wattage_details_el.appendChild(device_el);
-                    
-                    
-                    
-                }
-                */
-                
-                
-                
-                //week.sort((a, b) => (a.title.toLowerCase() > b.title.toLowerCase()) ? 1 : -1) // sort alphabetically
-            
-                //for (const device_id in week) {
-            
-            
-                //var week_keys = Object.keys(week);
-                //week_keys.sort(); 
-                //console.log('sorted week_keys: ', week_keys);
-                //for(let w = 0; w < week_keys.length; w++){
-                
-                    
             
                 // wrap header and footer around output
                 if(at_least_one_device_was_used){
@@ -1751,7 +1463,34 @@
     
     
     
+        // Helper method to get the title of a thing
+        get_title(device_id){
+            var thing_title = 'Unknown';
+            try{
+    			for (let key in this.all_things){
+
+                    if( this.all_things[key].hasOwnProperty('href') ){
+                    
+                        if( this.all_things[key]['href'].endsWith("/" + device_id) ){
+        				
+            				if( this.all_things[key].hasOwnProperty('title') ){
+            					thing_title = this.all_things[key]['title'];
+                                break;
+            				}
+                            
+                        }
+                    }
+                }
+            }
+            catch(e){
+                console.log("Energy Use: get_title: Error looping over things: ", e);
+            }
+			return thing_title;
+        }
     
+    
+    
+        // Helper method that rounds numbers to 2 decimals
         rounder(value){
             if(value > 0){
                 let return_string = "" + value.toFixed(2);
