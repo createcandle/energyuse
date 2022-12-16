@@ -481,7 +481,7 @@
         // Allow the user to skip over some devices when calculating the total energy use
         generate_devices_list(){
             if(this.debug){
-                console.log("in generate_devices_list (ignored devices)");
+                console.log("in generate_devices_list (ignored devices). this.device_details: ", this.device_details );
             }
             
             let ignore_list_el = document.getElementById('extension-energyuse-devices-list');
@@ -489,7 +489,7 @@
             //ignore_list_el.style.display = 'block';
             
             //if(this.persistent_data.ignore.indexOf(device_id) > -1 ){}
-            console.log("this.device_details: ", this.device_details);
+            //
             
             // Get the real devices
             var keys = Object.keys(this.device_details);
@@ -1167,7 +1167,7 @@
                         if (day.hasOwnProperty(device_id)) {
                             //console.log(" -- device_id: ", device_id);
                             if(device_id == 'virt'){
-                                console.log("skipping virt in day");
+                                //console.log("skipping virt in day");
                                 continue;
                             }
                             
@@ -1321,19 +1321,28 @@
                         console.warn('energyuse: week data had no start timestamp: ', week);
                     }
                 }
-            
+                
                 var week_device_titles = [];
-                for (const device_id in week) {
-                    console.log("device_id: ", device_id);
-                    console.log("week: ", week);
-                    console.log("week[device_id]: ", week[device_id]);
-                    if(typeof week[device_id]['title'] != 'undefined'){
-                        week_device_titles.push(week[device_id]['title']);
-                    }
-                    else{
-                        console.warn("energy use: add_week: missing thing title: ", week[device_id]);
+                try{
+                    for (const device_id in week) {
+                        //console.log("device_id: ", device_id);
+                        //console.log("week: ", week);
+                        //console.log("week[device_id]: ", week[device_id]);
+                        if(typeof week[device_id]['title'] != 'undefined'){
+                            week_device_titles.push(week[device_id]['title']);
+                        }
+                        else{
+                            console.warn("energy use: add_week: missing thing title: ", week[device_id]);
+                        }
                     }
                 }
+                catch(e){
+                    if(this.debug){
+                        console.log("energyuse: error getting device titles: ", e);
+                    }
+                }
+                
+                
                 
                 
                 //week_device_titles.sort();

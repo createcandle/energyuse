@@ -671,6 +671,7 @@ body td[class^="extension-energyuse-day-sum-"] {
     background-color:rgba(255,255,255,.1);
     border-radius:.5rem;
     padding:2rem;
+    margin-top:6rem;
 }
 
 .extension-energyuse-cost{
