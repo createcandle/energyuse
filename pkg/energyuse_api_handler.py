@@ -92,14 +92,11 @@ class EnergyUseAPIHandler(APIHandler):
                         if self.DEBUG:
                             print("in init")
                         
-                        
                         self.adapter.persistent_data['token'] = str(request.body['jwt']) 
                         self.adapter.save_persistent_data()
                         self.adapter.prune_data()
                         
                         #print(str(self.adapter.persistent_data))
-                        
-                        
                         
                         return APIResponse(
                           status=200,
@@ -108,6 +105,7 @@ class EnergyUseAPIHandler(APIHandler):
                         )
                         
                     
+                    # Save the JWT token so that the addon can access things data
                     if action == 'save_token':
                         if self.DEBUG:
                             print("in save_token")
@@ -128,7 +126,8 @@ class EnergyUseAPIHandler(APIHandler):
                           content=json.dumps({"state":token_saved}),
                         )
                         
-                        
+                    
+                    # Save the kWh price to persistent data
                     if action == 'save_kwh_price':
                         if self.DEBUG:
                             print("in save_kwh_price")
@@ -143,6 +142,7 @@ class EnergyUseAPIHandler(APIHandler):
                         )
                         
                         
+                    # Add a new virtual device
                     if action == 'add_virtual_device':
                         if self.DEBUG:
                             print("in add_virtual_device")
@@ -174,6 +174,8 @@ class EnergyUseAPIHandler(APIHandler):
                           content=json.dumps({"state":state,"virtual":self.adapter.persistent_data['virtual']}),
                         )
                         
+                        
+                    # Delete a virtual device
                     if action == 'delete_virtual_device':
                         if self.DEBUG:
                             print("in delete_virtual_device")
@@ -209,6 +211,48 @@ class EnergyUseAPIHandler(APIHandler):
                           content_type='application/json',
                           content=json.dumps({"state":state,"virtual":self.adapter.persistent_data['virtual']}),
                         )
+                        
+                        
+                    # devices can be ignored. This needs the device ID and a boolean 'choice'
+                    if action == 'ignore':
+                        if self.DEBUG:
+                            print("in ignore")
+                        
+                        state = False
+                        
+                        if not 'device_id' in request.body:
+                            if self.DEBUG:
+                                print("error, missing device ID parameter, cannot set ignore state")
+                                
+                        if not 'choice' in request.body:
+                            if self.DEBUG:
+                                print("error, missing choice parameter, cannot set ignore state")
+                                
+                        elif not 'ignore' in self.adapter.persistent_data:
+                            if self.DEBUG:
+                                print("error, ignore list not in persistent data somehow")
+                            
+                        else:
+                            if bool(request.body['choice']) == True:
+                                self.adapter.persistent_data['ignore'].append(str(request.body['device_id']))
+                                if self.DEBUG:
+                                    print("added device to ignore list")
+                            else:
+                                self.adapter.persistent_data['ignore'].remove(str(request.body['device_id']))
+                                if self.DEBUG:
+                                    print("removed device from ignore list")
+                            
+                            state = True
+                            self.adapter.save_persistent_data()
+                            
+    
+                        return APIResponse(
+                          status=200,
+                          content_type='application/json',
+                          content=json.dumps({"state":state,"ignore":self.adapter.persistent_data['ignore']}),
+                        )
+                        
+                        
                         
                     else:
                         return APIResponse(

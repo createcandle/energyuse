@@ -118,9 +118,7 @@
     max-width: 60rem;
     margin: 4rem auto 0 auto;
     display:flex;
-    
 }
-
 
 #extension-energyuse-view .extension-energyuse-tab-buttons button {
     background-color: transparent;
@@ -611,6 +609,11 @@ body td[class^="extension-energyuse-day-sum-"] {
     min-width:2.5rem;
 }
 
+
+.extension-energyuse-device-tr td{
+    border-bottom:1px dotted rgba(255,255,255,.15);
+}
+
 .extension-energyuse-device-tr:hover{
     background-color:rgba(0,0,0,.1)
 }
@@ -698,6 +701,9 @@ body td[class^="extension-energyuse-day-sum-"] {
     display:none;
 }
 
+.show-cost #extension-energyuse-today-so-far-container .extension-energyuse-big-unit{
+    display:none;
+}
 
 
 #extension-energyuse-kwh-price{
@@ -776,11 +782,40 @@ body td[class^="extension-energyuse-day-sum-"] {
     display:inline-block;
 }
 
+/*
 #extension-energyuse-wattage-details > div:not(:last-of-type){
     border-bottom:1px dotted rgba(255,255,255,.2);
 }
+*/
 
 
+
+/*  ignored devices list  */
+
+#extension-energyuse-devices-list{
+    margin-bottom:4rem;
+}
+
+.extension-energyuse-devices-list-item{
+    display:flex;
+    padding:1rem;
+    justify-content:space-between;
+    align-items:center;
+    
+}
+
+.extension-energyuse-devices-list-item:not(:last-of-type){
+    border-bottom:1px dotted rgba(255,255,255,.1);
+}
+
+.extension-energyuse-devices-list-item input[type=checkbox]{
+    zoom:200%;
+}
+
+.extension-energyuse-wattage-device-ignored,
+.extension-energyuse-device-ignored td{
+    opacity:.5;
+}
 
 
 /*   Virtual devices  */
@@ -823,19 +858,18 @@ body td[class^="extension-energyuse-day-sum-"] {
     content:' kWh per day';
 }
 
-
-.extension-energyuse-wattage-device-virtual{
-    opacity:.6;
-}
-
-
+/*
 .extension-energyuse-wattage-device + .extension-energyuse-wattage-device-virtual{
     border-top:1px solid rgba(255,255,255,.5);
 }
+*/
 
+.extension-energyuse-wattage-device-virtual,
+.extension-energyuse-virtual-item-name,
 .extension-energyuse-device-tr-virtual{
-    opacity:.5;
+    color:#d0d06f;
 }
+
 
 .extension-energyuse-show-if-virtual{
     display:none;

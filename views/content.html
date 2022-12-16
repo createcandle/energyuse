@@ -6,7 +6,7 @@
 
 		<div class="extension-energyuse-tab-buttons">
             <button id="extension-energyuse-tab-button-overview" class="extension-energyuse-main-tab-button extension-energyuse-tab-selected">Overview</button>
-            <button id="extension-energyuse-tab-button-virtual" class="extension-energyuse-main-tab-button">Virtual</button>
+            <button id="extension-energyuse-tab-button-virtual" class="extension-energyuse-main-tab-button">Devices</button>
         </div>
         
         <div id="extension-energyuse-tabs-container">
@@ -92,14 +92,24 @@
             
             <div id="extension-energyuse-virtual-page">
                 <div class="extension-energyuse-centered-page extension-energyuse-vlak">
-                    <h2>Virtual energy measurement</h2>
-                    <p>Some always-on devices consume a consistent amount of electricity every day. Your internet router, for example.</p>
-                    <p>To use smart plugs to measure such very stable consumption would be a bit of a waste. Once you know how much energy a device normally uses, you can create a 'virtual energy measurement devices' instead. Doing so allows you to pretend that the energy consumption of the device is being measured without needing an actual electricity measurement plug.</p>
+                    
+                    
+                    <h2>Ignored devices</h2>
+                    <p>You may want some energy measurement devices to be skipped when calculating total use. Typically this happens when you have an energy measurement device that is plugged into another energy measurement device.</p>
+                    <p>Details about the device will still be shown; only the calculation of total energy consumption values is affected.</p>
+                    
+                    <div id="extension-energyuse-devices-list" class="extension-energyuse-vlak"></div>
+                    
+                    
+                    
+                    <h2 style="margin-top:10rem">Virtual devices</h2>
+                    <p>Some always-on devices, such as your internet router, consume a consistent and predictable amount of electricity every day.</p>
+                    <p>To use smart plugs to measure their consumption would be a bit of a waste. Once you know how much energy a device normally uses, you can create a 'virtual energy measurement devices' instead. Doing so allows you to pretend that the energy consumption of the device is being measured without needing an real electricity measurement plug.</p>
                     <p>To add a virtual device, simply provide a name and how much kWh it uses per day.</p>
-                    <h3>Virtual devices</h3>
+                    
                     <div id="extension-energyuse-virtual-list">There are no virtual devices yet.</div>
                     
-                    <h3>Add virtual device</h3>
+                    <h3>Add a virtual device</h3>
                     
                     <div class="extension-energyuse-vlak" style="display:flex; flex-wrap:wrap; margin-bottom:1rem;flex-direction:column">
                         <div style="width:100%;min-width:20rem;box-sizing:border-box;margin-bottom:2rem">

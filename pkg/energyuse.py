@@ -87,7 +87,7 @@ class EnergyUseAdapter(Adapter):
         self.virtual_total_power = None
         self.total_power = None
         self.total_power_interval = 10
-        self.update_simple_things_countdown = 10
+        self.update_simple_things_countdown = 5
         self.update_simple_things_running = False
         
         # Get persistent data
@@ -124,6 +124,8 @@ class EnergyUseAdapter(Adapter):
         if not 'virtual' in self.persistent_data:
             self.persistent_data['virtual'] = {}
         
+        if not 'ignore' in self.persistent_data: # device ID's of devices that should be skipped when scanning energy use
+            self.persistent_data['ignore'] = []
 
         if 'previous_hour' in self.persistent_data:
             #print("setting previous_hour from persistent data: " + str(self.persistent_data['previous_hour'])) # TODO: do this using the last timestamp instead, to be very sure that the addon was restarted quickly, and not hours or days later.
@@ -464,6 +466,12 @@ class EnergyUseAdapter(Adapter):
                                     thing_id = str(thing['id'].rsplit('/', 1)[-1])
                                     if self.DEBUG:
                                         print("\nenergy monitor device spotted: " + str(thing_id) )
+                                        
+                                    if thing_id in self.persistent_data['ignore']:
+                                        if self.DEBUG:
+                                            print("Skipping ignored thing: " + str(thing_id) )
+                                        continue
+                                        
                                     #print("thing = "  + str(thing))
                                     #print("thing_id = "  + str(thing_id))
                                     #new_simple_things[thing_id] = []
@@ -672,6 +680,12 @@ class EnergyUseAdapter(Adapter):
                         thing_id = str(thing['id'].rsplit('/', 1)[-1])
                         if self.DEBUG:
                             print("\nenergy monitor device spotted: " + str(thing_id) )
+                            
+                        if thing_id in self.persistent_data['ignore']:
+                            if self.DEBUG:
+                                print("Skipping ignored thing: " + str(thing_id) )
+                            continue    
+                        
                         #print("thing = "  + str(thing))
                         #print("thing_id = "  + str(thing_id))
                         #new_simple_things[thing_id] = []
@@ -836,6 +850,9 @@ class EnergyUseAdapter(Adapter):
                                                                             else:
                                                                                 if self.DEBUG:
                                                                                     print("there was data for yesterday, but this device was not present in it: " + str(thing_id))
+                                                                                    print("EXPERIMENT: ADDING CURRENT VALUE AS THE VALUE FOR YESTERDAY")
+                                                                                #experiment
+                                                                                self.persistent_data['energy'][str(previous_time)][thing_id] = round(value, 5)
                                                         
                                                                         else:
                                                                             if self.DEBUG:
@@ -963,7 +980,7 @@ class EnergyUseAdapter(Adapter):
                                 hourly_delta = day_delta - self.persistent_data['previous_hour_day_delta']
                                 if self.DEBUG:
                                     print("hourly change: " + str(hourly_delta))
-                                self.set_value_on_thing('lasthour',hourly_delta)
+                                self.set_value_on_thing('lasthour',round(hourly_delta,3))
                             else:
                                 if self.DEBUG:
                                     print("day_delta was same or smaller than previous self.previous_hour_day_delta. No additional energy used this hour?")
