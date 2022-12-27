@@ -30,9 +30,13 @@
             this.current_energy_price = null;
 
             this.device_details = {};
-            this.show_wattage_details = false;
+            this.show_today_details = false;
             
             this.virtual_wattage = 0;
+
+            this.live = null;
+            this.live_array = [];
+            this.busy_polling = false;
 
             setTimeout(() => {
                 const jwt = localStorage.getItem('jwt');
@@ -69,7 +73,7 @@
 			
             try{
 				clearInterval(this.interval);
-                clearInterval(this.wattage_interval);
+                clearInterval(this.wattage_interval); // TODO: doesn't exist?
 			}
 			catch(e){
 				//console.log("no interval to clear? ", e);
@@ -86,6 +90,7 @@
 			
             try{
 				clearInterval(this.interval);
+                clearInterval(this.wattage_interval);
 			}
 			catch(e){
 				//console.log("no interval to clear?: ", e);
@@ -129,14 +134,44 @@
                 this.generate_devices_list();
             });
             
+            
+            /*
+            document.getElementById('extension-energyuse-totals').addEventListener('click', (event) => {
+                this.show_today_details = !this.show_today_details;
+                this.generate_today_details();
+            });
+            */
+            
+            document.getElementById('extension-energyuse-today-real-kwh-container').addEventListener('click', (event) => {
+                this.show_today_details = !this.show_today_details;
+                this.generate_today_details();
+                if(this.show_today_details && window.innerWidth < 1000){
+                    document.getElementById('extension-energyuse-today-details').scrollIntoView();
+                }
+            });
+            
+            document.getElementById('extension-energyuse-today-combined-kwh-container').addEventListener('click', (event) => {
+                this.show_today_details = !this.show_today_details;
+                this.generate_today_details();
+                if(this.show_today_details && window.innerWidth < 1000){
+                    document.getElementById('extension-energyuse-today-details').scrollIntoView();
+                }
+            });
+            
             document.getElementById('extension-energyuse-real-wattage-container').addEventListener('click', (event) => {
-                this.show_wattage_details = !this.show_wattage_details;
-                this.generate_wattage_details();
+                this.show_today_details = !this.show_today_details;
+                this.generate_today_details();
+                if(this.show_today_details && window.innerWidth < 1000){
+                    document.getElementById('extension-energyuse-today-details').scrollIntoView();
+                }
             });
             
             document.getElementById('extension-energyuse-total-wattage-container').addEventListener('click', (event) => {
-                this.show_wattage_details = !this.show_wattage_details;
-                this.generate_wattage_details();
+                this.show_today_details = !this.show_today_details;
+                this.generate_today_details();
+                if(this.show_today_details && window.innerWidth < 1000){
+                    document.getElementById('extension-energyuse-today-details').scrollIntoView();
+                }
             });
             
             document.getElementById('extension-energyuse-add-virtual-button').addEventListener('click', (event) => {
@@ -270,9 +305,9 @@
             this.start();
             
             // get wattage interval
-            this.interval = setInterval(() =>{
-                this.get_wattage();
-            },10000);
+            this.wattage_interval = setInterval(() =>{
+                this.get_today();
+            },5000);
 		}   
 		
 	
@@ -296,178 +331,253 @@
         
         
         
+        
+        
+        
+        
         //
-        //  GET WATTAGE
+        //  GET TODAY
         //
-        // Get data from client-side webthings api about how much energy the devices are using at the moment, and show that value in the big circles.
-        // Also creates a dictionary with that data to be used for creating the small table
-        get_wattage(){
-            if(this.debug){
-                //console.log("in get_wattage");
-            }
+        // Get data from addon backend about how much energy the devices are using at the moment, and show that value in the big circles.
+        // Also creates a dictionary with that data to be used for creating the small table if the user wants to view that
+        
+        get_today(){
             
-            var total_wattage = 0;
-            
-            const current_timestamp = Math.floor(Date.now() / 1000);
-            
-            // calculate the total virtual wattage first
-            var virtual_wattage = 0;
-            for( var id in this.persistent_data.virtual ){
+            if(this.busy_polling == true){
                 if(this.debug){
-                    console.log("adding virtual wattage: ", this.persistent_data.virtual[id]);
+                    console.warn("get_today: already busy polling. Aborting.");
                 }
-                const virtual = this.persistent_data.virtual[id];
-                if(typeof virtual.deleted_time != 'undefined'){
-                    if(virtual.deleted_time < current_timestamp){
-                        if(this.debug){
-                            console.log("This virtual device was deleted by this point, so it will be skipped");
-                        }
-                        continue;
-                    }
-                }
-                virtual_wattage = virtual_wattage + ((parseFloat(virtual.kwh) * 1000) / 24);
-                if(this.debug){
-                    console.log("new virtual wattage: ", virtual_wattage);
-                }
+                return
             }
+            this.busy_polling = true;
             
-            this.virtual_wattage = virtual_wattage;
-            
-            try{
-    			for (let key in this.all_things){
-                    //console.log("WAT KEY: ", key);
-                    //console.log(this.all_things[key]);
-                    
-                    if(this.all_things[key]['href'] == '/things/energyuse'){
-                        if(this.debug){
-                            console.log("skipping the energy use addon device");
-                        }
-                        continue;
+            window.API.postJson(
+              `/extensions/${this.id}/api/ajax`,
+    			{'action':'poll'}
+            ).then((body) => {
+                if(this.debug){
+                    console.log("Energy use poll response: ", body);
+                }
+                
+                if(typeof body.live != 'undefined'){
+                    this.live = body.live;
+                }
+                
+                
+                if(body.data_blur == 'Off' || body.data_blur == '1 minute'){
+                    document.getElementById('extension-energyuse-real-wattage').innerText = this.rounder(body.real_total_power);
+                    document.getElementById('extension-energyuse-total-wattage').innerText = this.rounder(body.real_total_power + body.virtual_total_power);
+                    document.getElementById('extension-energyuse-real-wattage-container').style.display = 'block';
+                    document.getElementById('extension-energyuse-total-wattage-container').style.display = 'block';
+                }
+                else{
+                    document.getElementById('extension-energyuse-real-wattage-container').style.display = 'none';
+                    document.getElementById('extension-energyuse-total-wattage-container').style.display = 'none';
+                }
+                
+                //document.getElementById('extension-energyuse-today-real-kwh').innerText = this.rounder(body.total_real_kwh_since_midnight);
+                
+                if(body.total_virtual_kwh_since_midnight != null && body.total_virtual_kwh_since_midnight != 0){
+                    document.getElementById('extension-energyuse-today-combined-kwh').innerText = this.rounder(body.total_virtual_kwh_since_midnight + body.total_real_kwh_since_midnight);
+                }
+                
+                
+                /*
+                previous_hour_day_delta
+                real_total_power
+                total_real_kwh_since_midnight
+                total_virtual_kwh_since_midnight
+                virtual_total_power
+                */
+                
+                
+                
+                
+                
+                // today so far kWh combined
+                var kwh_value = null;
+                /*
+                if(body.total_real_kwh_since_midnight != null){
+                    kwh_value = body.total_real_kwh_since_midnight;
+                }
+                else if(body.previous_hour_day_delta != null){
+                    kwh_value = body.previous_hour_day_delta;
+                }
+                */
+                if(body.total_virtual_kwh_since_midnight != null){
+                    if(body.data_blur == 'Off' || body.data_blur == '1 minute'){
+                        kwh_value = body.total_real_kwh_since_midnight + body.total_virtual_kwh_since_midnight
+                     //body.total_real_kwh_since_midnight;
                     }
-                    
-                    const device_id = this.get_device_id_from_url( this.all_things[key]['href'] );
-
-                    if( this.all_things[key].hasOwnProperty('properties') ){
-                        
-                        if(this.debug){
-                            //console.log( this.all_things[key]['title'] );
-                            //console.log( this.all_things[key]['properties'] );
-                        }
-                        
-                        for (let property_key in this.all_things[key]['properties'] ){
-                            
-                            if( this.all_things[key]['properties'][property_key].hasOwnProperty('@type') ){
-                                //console.log("has title : ", this.all_things[key]['properties'][property_key]['title'].toLowerCase() );
-                                if( this.all_things[key]['properties'][property_key]['@type'] == "InstantaneousPowerProperty"){ // .endsWith("/" + device_id) 
-                				    if(this.debug){
-                                        //console.log("device has InstantaneousPowerProperty");
-                                        //console.log('device: ', this.all_things[key]);
-                                        //console.log("prop: ", property_key );
-                                        //console.log(this.all_things[key]['properties'][property_key]);
-                                    }
-                                    
-                                    var property_href = "";
-                                    
-                                    if(this.all_things[key]['properties'][property_key].hasOwnProperty('forms')){
-                                        if(this.all_things[key]['properties'][property_key]['forms'].length > 0){
-                                            if(this.all_things[key]['properties'][property_key]['forms'][0].hasOwnProperty('href')){
-                                                property_href = this.all_things[key]['properties'][property_key]['forms'][0]['href'];
-                                            }
-                                        }
-                                        
-                                        if(this.debug){
-                                            //console.log("power use: property had forms[0]href: ", property_href );
-                                        }
-                                    }
-                                    
-                                    if( property_href == "" && this.all_things[key].hasOwnProperty('href') && this.all_things[key]['properties'][property_key].hasOwnProperty('name')){
-                                        property_href = this.all_things[key]['href'] + '/properties/' + this.all_things[key]['properties'][property_key]['name'];
-                                        if(this.debug){
-                                            //console.log("power use: constructed property href: ", property_href );
-                                        }
-                                    }
-                                    
-                                    var device_title = 'Unknown';
-                                    if(this.all_things[key].hasOwnProperty('title')){
-                                        device_title = this.all_things[key]['title'];
-                                    }
-                                    
-                                    if(property_href != ""){
-                                        if(this.debug){
-                                            //console.log("getting: ", property_href);
-                                        }
-                                        API.getJson( property_href )
-                                        .then((prop) => {
-                                            
-                                            //if(this.debug){
-                                            //    console.log("WATT: ", this.all_things[key]['title'], prop);
-                                            //}
-                                            const parsed_wattage = parseFloat(prop);
-                                            if(typeof( parsed_wattage ) == 'number'){
-                                                
-                                                if(this.debug){
-                                                    //console.log("this.all_things[key]['title']: ", this.all_things[key]['title']);
-                                                }
-                                                
-                                                if(typeof this.device_details[ this.all_things[key]['title'] ] == 'undefined'){
-                                                    this.device_details[ this.all_things[key]['title'] ] = {};
-                                                    //this.device_details[device_title]['wattages'] = []; // TODO: show small graph?
-                                                }
-                                                //this.device_details[ this.all_things[key]['title'] ] = {};
-                                                this.device_details[ this.all_things[key]['title'] ]['wattage'] = parsed_wattage;
-                                                this.device_details[ this.all_things[key]['title'] ]['device_id'] = device_id;
-                                                // Skip devices that should be ignored
-                                                if(this.persistent_data.ignore.indexOf(device_id) > -1 ){
-                                                    this.device_details[ this.all_things[key]['title'] ]['ignore'] = true;
-                                                }
-                                                else{
-                                                    this.device_details[ this.all_things[key]['title'] ]['ignore'] = false;
-                                                    total_wattage += parsed_wattage;
-                                                }
-                                                
-                                                if(this.show_wattage_details){
-                                                    this.generate_wattage_details();
-                                                }
-                                                
-                                            }
-                                            if(total_wattage >= 10){
-                                                document.getElementById('extension-energyuse-real-wattage').innerText = Math.round(total_wattage);
-                                            }
-                                            else{
-                                                document.getElementById('extension-energyuse-real-wattage').innerText = this.rounder(total_wattage);
-                                            }
-                                            
-                                            if(this.virtual_wattage + total_wattage >= 10){
-                                                document.getElementById('extension-energyuse-total-wattage').innerText = Math.round(this.virtual_wattage + total_wattage);
-                                            }
-                                            else{
-                                                document.getElementById('extension-energyuse-total-wattage').innerText = this.rounder(this.virtual_wattage + total_wattage);
-                                            }
-                                            
-                                        }).catch((e) => {
-                                            if(this.debug){
-                                                console.error("energy use: get_wattage: error getting wattage from device: ", this.all_things[key]['title'], e);
-                                            }
-                                        });
-                                    }
-                                    else{
-                                        console.error("WARNING, could not get valid href for instantanious power property: ", this.all_things[key]['properties'][property_key]);
-                                    }
-                                    
-                                    //break; // avoids hypothetical situation with multiple instantenous power properties on one device
-                                }
-                            }
-                        }
-                        
+                    else if(body.data_blur == '1 hour'){
+                        kwh_value = body.previous_hour_day_delta;
+                    }
+                
+                    if(kwh_value == null){
+                        console.log("not showing combined kWh value because of data blur setting");
+                        document.getElementById('extension-energyuse-today-combined-kwh-container').style.display = 'none';
                     }
                     else{
-                        console.error("Energy use: spotted a thing without properties?");
+                        var today_so_far_html = '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(kwh_value, true) + '</span>'; // rounder true parameter indicates: show zero values
+                        if(this.showing_cost && this.current_energy_price != null){
+                            today_so_far_html += '<span class="extension-energyuse-cost">' + this.rounder( kwh_value * this.current_energy_price, true) + '</span>';
+                        }
+                        document.getElementById('extension-energyuse-today-combined-kwh').innerHTML = today_so_far_html;
+                        document.getElementById('extension-energyuse-today-combined-kwh').style.display = 'block';
                     }
                 }
+                
+                
+                // today so far kWh real
+                if(body.data_blur == 'Off' || body.data_blur == '1 minute'){
+                    if( this.rounder(kwh_value) != this.rounder(body.total_real_kwh_since_midnight) ){ // make sure the real kwh is actually different by comparing if the the kwh_value which is still set with the total combined
+                        kwh_value = body.total_real_kwh_since_midnight; // could still be set to null here if body.total_real_kwh_since_midnight happens to be null
+                    }
+                    else{
+                        kwh_value = null;
+                    }
+                }
+                else{
+                    kwh_value = null;
+                }
+                
+                if(kwh_value == null){
+                    console.log("not showing real kWh value (because of data blur setting or not needed)");
+                    document.getElementById('extension-energyuse-today-real-kwh-container').style.display = 'none';
+                }
+                else{
+                    var today_so_far_html = '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(kwh_value, true) + '</span>'; // rounder true parameter indicates: show zero values
+                    if(this.showing_cost && this.current_energy_price != null){
+                        today_so_far_html += '<span class="extension-energyuse-cost">' + this.rounder( kwh_value * this.current_energy_price, true) + '</span>';
+                    }
+                    document.getElementById('extension-energyuse-today-real-kwh').innerHTML = today_so_far_html;
+                    document.getElementById('extension-energyuse-today-real-kwh-container').style.display = 'block';
+                }
+                
+                
+                this.generate_today_details();
+                
+                
+                this.busy_polling = false;
+                
+            }).catch((e) => {
+      			console.log("get_today: error adding virtual energy measurement device: ", e);
+                this.busy_polling = false;
+            });
+        
+        }
+        
+        
+        
+        
+        
+        //
+        //  GENERATE TODAY DETAILS
+        //
+        // Show live power consumption in a small table. Assumes this.device_details has already been created
+        generate_today_details(){
+            if(this.debug){
+                console.log("in generate_today_details. this.show_today_details: ", this.show_today_details);
+            }
+            if(this.live == null){
+                console.warn("this.live is still null");
+                return;
+            }else{
+                
+                //this.live.sort((a, b) => (a.title.toLowerCase() > b.title.toLowerCase()) ? 1 : -1) // sort alphabetically
+                
+                console.log("This.live: ", this.live);
+            }
+            
+            this.live_array = [];
+
+            for (var key in this.live) {
+                if (this.live.hasOwnProperty(key)) {
+                    this.live_array.push( this.live[key] );
+                }
+            }
+            this.live_array.sort((a, b) => (a.title.toLowerCase() > b.title.toLowerCase()) ? 1 : -1) // sort alphabetically
+            console.log("sorted this.live_array: ", this.live_array);
+            
+            
+            try{
+                let today_details_el = document.getElementById('extension-energyuse-today-details');
+                today_details_el.innerHTML = "";
+                
+                if(this.show_today_details == false){
+                    today_details_el.style.display = 'none';
+                    return;
+                }
+                
+                today_details_el.style.display = 'block';
+                
+                const current_timestamp = Math.floor(Date.now() / 1000);
+                
+                for(let w = 0; w < this.live_array.length; w++){
+                    console.log("this.live_array[w]: ", this.live_array[w]);
+                    
+                    //const device_id = keys[w];
+                    //const title = this.live[device_id]['title'];
+                    const title = this.live_array[w]['title'];
+                    
+                    
+                    //console.log('title: ', title);
+                    let device_el = document.createElement('div');
+                    device_el.classList.add('extension-energyuse-wattage-device');
+            
+                    //var ignore_class = "";
+                    if(this.live_array[w].ignored){
+                        //ignore_class = " ignore ";
+                        device_el.classList.add('extension-energyuse-wattage-device-ignored');
+                        device_el.setAttribute('title','Ignored device');
+                    }
+                
+                    var today_kwh_cost_html ="";
+                    var today_kwh_cost = "";
+                    var today_kwh_value = "";
+                    if(typeof this.live_array[w]['kwh'] != 'undefined'){
+                        today_kwh_value = this.live_array[w]['kwh'];
+                        if(this.showing_cost && this.current_energy_price != null){
+                            today_kwh_cost_html = '<span class="extension-energyuse-cost">' + this.rounder( today_kwh_value * this.current_energy_price ) + '</span>';
+                        }
+                    }
+                    
+                    if( this.live_array[w]['virtual'] ){
+                        device_el.classList.add('extension-energyuse-wattage-device-virtual');
+                        device_el.setAttribute('title','Virtual device');
+                    }
+                    
+                    var today_device_html =  '<span class="extension-energyuse-wattage-device-title">' + title + '</span>';
+                        today_device_html += '<span class="extension-energyuse-wattage-and-kwh">';
+                        today_device_html += '<span class="extension-energyuse-wattage-device-value">' + this.rounder(this.live_array[w].power) + '</span>';
+                        today_device_html += '<span class="extension-energyuse-today-kwh-and-cost"><span class="extension-energyuse-today-kwh-value">' + today_kwh_value + '</span>' + today_kwh_cost_html + '</span>'
+                        today_device_html += '</span>';
+                    
+                    device_el.innerHTML = today_device_html;
+            
+                    today_details_el.appendChild(device_el);
+                }
+                
+                //if(this.show_today_details){
+                
+                    // Get the real devices wattage
+                    //var keys = Object.keys(this.live);
+                    //console.log('keys: ', keys);
+                    //keys.sort();
+                    
+                    // TODO: sort by title
+                    
+                    
+                    
+                
+                    
+                
+                //}
             }
             catch(e){
-                console.error("Energy Use: get_wattage error: ", e);
+                console.error("Error in generate_today_details: ", e);
             }
+            
         }
         
         
@@ -475,13 +585,14 @@
         
         
         
+        
         //
-        //  GENERATE IGNORE LIST
+        //  GENERATE (IGNORED) DEVICES LIST
         //
-        // Allow the user to skip over some devices when calculating the total energy use
+        // Allow the user to skip over some devices when calculating the total energy use. Could be expanded to other settings.
         generate_devices_list(){
             if(this.debug){
-                console.log("in generate_devices_list (ignored devices). this.device_details: ", this.device_details );
+                console.log("in generate_devices_list (ignored devices). this.live_array: ", this.live_array );
             }
             
             let ignore_list_el = document.getElementById('extension-energyuse-devices-list');
@@ -492,18 +603,21 @@
             //
             
             // Get the real devices
-            var keys = Object.keys(this.device_details);
+            //var keys = Object.keys(this.device_details);
             //console.log('keys: ', keys);
-            keys.sort(); 
-            for(let w = 0; w < keys.length; w++){
-                const title = keys[w];
+            //keys.sort(); 
+            for(let w = 0; w < this.live_array.length; w++){
+                if(this.live_array[w]['virtual']){
+                    continue; // skip virtual devices
+                }
+                //console.log("generate_devices_list: this.live_array[w]: ", this.live_array[w]);
+                
+                const title = this.live_array[w]['title'];
                 //console.log('title: ', title);
                 const device_el = document.createElement('div');
                 device_el.classList.add('extension-energyuse-devices-list-item');
             
                 //device_el.innerHTML = '<span class="extension-energyuse-devices-list-title">' + title + '</span><span class="extension-energyuse-wattage-device-value">' + this.device_details[title].wattage + '</span>';
-            
-                
             
                 // Add device title
                 const title_el = document.createElement('span');
@@ -515,39 +629,45 @@
                 const ignore_checkbox_el = document.createElement('input');
                 ignore_checkbox_el.classList.add('extension-energyuse-devices-list-ignore-checkbox');
                 ignore_checkbox_el.type = "checkbox";
-                ignore_checkbox_el.name = "extension-energyuse-devices-list-" + this.device_details[title].device_id;
+                ignore_checkbox_el.name = "extension-energyuse-devices-list-" + this.live_array[w].id;
                 //ignore_checkbox_el.value = "value";
-                ignore_checkbox_el.id = "extension-energyuse-devices-list-" + this.device_details[title].device_id;
-                if(this.persistent_data.ignore.indexOf( this.device_details[title].device_id ) > -1 ){
+                ignore_checkbox_el.id = "extension-energyuse-devices-list-" + this.live_array[w].id;
+                if(this.live_array[w].ignored){
                     ignore_checkbox_el.checked = true;
                 }
                 
                 ignore_checkbox_el.addEventListener('change', (event) => {
-                    console.log("checkbox changed. Device_id: ", this.device_details[title].device_id, ignore_checkbox_el.checked);
+                    if(this.debug){
+                        console.log("checkbox changed. w, device_id, checked: ", w, this.live_array[w].id, ignore_checkbox_el.checked);
+                    }
+                    
                     
         	        window.API.postJson(
         	          `/extensions/${this.id}/api/ajax`,
-        				{'action':'ignore','choice':ignore_checkbox_el.checked,'device_id':this.device_details[title].device_id}
+        				{'action':'ignore','choice':ignore_checkbox_el.checked,'device_id':this.live_array[w].id}
         	        ).then((body) => {
                         if(this.debug){
                             console.log("Changed device ignore state. response: ", body);
                         }
+                        //console.log("Changed device ignore state. response: ", body);
                         //if(body.state == true){    
                         //}
                     
-                        this.persistent_data.ignore = body.ignore;
-                    
+                        this.persistent_data.ignore = body.ignore; // TODO; not really used here anymore, no need to update it?
+                        
                         if(body.state == false){
                             setTimeout(() => {
                                 this.generate_devices_list();
                             }, 100);
                         }
                         
-                    
         	        }).catch((e) => {
-        	  			console.log("error deleting virtual energy measurement device: ", e);
+        	  			console.log("error setting device ignore state: ", e);
         	        });
                     
+                    this.live_array[w].ignored = ignore_checkbox_el.checked;
+                    
+                    return false;
                 });
                 
                 device_el.appendChild(ignore_checkbox_el);
@@ -559,76 +679,6 @@
         
         
         
-        //
-        //  GENERATE WATTAGE DETAILS
-        //
-        // Show live power consumption in a small table. Assumes this.device_details has already been created
-        generate_wattage_details(){
-            if(this.debug){
-                console.log("in generate_wattage_details");
-            }
-            
-            let wattage_details_el = document.getElementById('extension-energyuse-wattage-details');
-            wattage_details_el.innerHTML = "";
-            wattage_details_el.style.display = 'block';
-            
-            //let combined_wattage = 0;
-            const current_timestamp = Math.floor(Date.now() / 1000);
-            
-            if(this.show_wattage_details){
-                
-                
-                // Get the real devices wattage
-                var keys = Object.keys(this.device_details);
-                //console.log('keys: ', keys);
-                keys.sort(); 
-                for(let w = 0; w < keys.length; w++){
-                    const title = keys[w];
-                    //console.log('title: ', title);
-                    const device_el = document.createElement('div');
-                    device_el.classList.add('extension-energyuse-wattage-device');
-                
-                    var ignore_class = "";
-                    if(this.device_details[title].ignore){
-                        ignore_class = " ignore ";
-                        device_el.classList.add('extension-energyuse-wattage-device-ignored');
-                    }
-                
-                    device_el.innerHTML = '<span class="extension-energyuse-wattage-device-title">' + title + '</span><span class="extension-energyuse-wattage-device-value">' + this.device_details[title].wattage + '</span>';
-                
-                    wattage_details_el.appendChild(device_el);
-                }
-                
-                // Get the virtual devices wattage
-                for( var id in this.persistent_data.virtual ){
-                    if(this.debug){
-                        console.log("adding virtual wattage: ", this.persistent_data.virtual[id]);
-                    }
-                    
-                    
-                    // virtual item data
-                    const virtual = this.persistent_data.virtual[id];
-                    
-                    if(typeof virtual.deleted_time != 'undefined'){
-                        if(virtual.deleted_time < current_timestamp){
-                            if(this.debug){
-                                console.log("This virtual device was deleted by this point, so it will be skipped");
-                            }
-                            continue;
-                        }
-                    }
-                    
-                    var device_el = document.createElement('div');
-                    device_el.classList.add('extension-energyuse-wattage-device-virtual');
-                    device_el.innerHTML = '<span class="extension-energyuse-wattage-device-title">' + virtual.name + '</span><span class="extension-energyuse-wattage-device-value">' + this.rounder((parseFloat(virtual.kwh) * 1000) / 24) + '</span>';
-                    
-                    wattage_details_el.appendChild(device_el);
-                    
-                }
-                
-            }
-            
-        }
         
         
         // Get the data stored by the addon
@@ -647,8 +697,8 @@
 					
                     
                     if(typeof body.debug != 'undefined'){
-                        if(body.debug){
-                            this.debug = body.debug;
+                        this.debug = body.debug;
+                        if(this.debug){
                             document.getElementById('extension-energyuse-debug-warning').style.display = 'block';
         					console.log("Energy use init API result: ", body);
                         }
@@ -715,7 +765,7 @@
                         this.regenerate_items(this.persistent_data.energy);
                     }
                     
-                    this.get_wattage();
+                    this.get_today();
 				
                     if(typeof this.persistent_data.ignore != 'undefined'){
                         this.generate_devices_list();
@@ -724,24 +774,6 @@
                 
                     if(typeof this.persistent_data.virtual != 'undefined'){
                         this.generate_virtual_list();
-                    }
-                    
-                    
-                    //console.log("this.persistent_data.previous_hour_day_delta: ", this.persistent_data.previous_hour_day_delta);
-                    if(typeof this.persistent_data.previous_hour_day_delta != 'undefined'){
-                        //document.getElementById('extension-energyuse-today-so-far').innerText = this.rounder(this.persistent_data.previous_hour_day_delta,true); // true means: return zero if the value is zero
-                        
-                        var today_so_far_html = '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(this.persistent_data.previous_hour_day_delta,true) + '</span>'; // here the actual kwh value gets added to the html output
-            
-                        if(this.showing_cost && this.current_energy_price != null){
-                            today_so_far_html += '<span class="extension-energyuse-cost">' + this.rounder( this.persistent_data.previous_hour_day_delta * this.current_energy_price, true ) + '</span>';
-                        }
-                        
-                        document.getElementById('extension-energyuse-today-so-far').innerHTML = today_so_far_html;
-                        
-                    }
-                    else{
-                        document.getElementById('extension-energyuse-today-so-far').innerText = '?';
                     }
                     
                 
@@ -830,7 +862,7 @@
             	        }).catch((e) => {
             	  			console.log("error deleting virtual energy measurement device: ", e);
             	        });
-                        
+                        return false;
                         
                     });
                     
@@ -878,7 +910,7 @@
                 }
 		        
                 /*
-                if(this.show_cost){
+                if(this.showing_cost){
                     document.getElementById('extension-energyuse-overview-page').classList.add('show-cost');
                 }
                 else{
@@ -1325,15 +1357,23 @@
                 var week_device_titles = [];
                 try{
                     for (const device_id in week) {
-                        //console.log("device_id: ", device_id);
+                        if(this.debug){
+                            console.log("device_id: ", device_id);
+                        }
                         //console.log("week: ", week);
                         //console.log("week[device_id]: ", week[device_id]);
-                        if(typeof week[device_id]['title'] != 'undefined'){
-                            week_device_titles.push(week[device_id]['title']);
+                        if(typeof week[device_id] != 'undefined'){
+                            if(typeof week[device_id]['title'] != 'undefined'){
+                                week_device_titles.push(week[device_id]['title']);
+                            }
+                            else{
+                                console.warn("energy use: add_week: missing thing title: ", week[device_id]);
+                            }
                         }
                         else{
-                            console.warn("energy use: add_week: missing thing title: ", week[device_id]);
+                            console.error("week[device_id] missing? how is this possible?: ", week);
                         }
+                        
                     }
                 }
                 catch(e){

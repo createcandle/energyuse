@@ -101,9 +101,34 @@ class EnergyUseAPIHandler(APIHandler):
                         return APIResponse(
                           status=200,
                           content_type='application/json',
-                          content=json.dumps({'persistent':self.adapter.persistent_data,'debug':self.adapter.DEBUG,'last_hour_time':self.adapter.last_kwh_measurement_time}),
+                          content=json.dumps({'persistent':self.adapter.persistent_data,
+                                              'last_hour_time':self.adapter.last_kwh_measurement_time,
+                                              'live_interval':self.adapter.live_interval,
+                                              'data_blur':self.adapter.persistent_data['data_blur'],
+                                              'debug':self.adapter.DEBUG
+                                              }),
                         )
                         
+                    
+                    if action == 'poll':
+                        if self.DEBUG:
+                            print("in poll")
+                        
+                        return APIResponse(
+                          status=200,
+                          content_type='application/json',
+                          content=json.dumps({
+                                              'live':self.adapter.live,
+                                              'real_total_power':self.adapter.real_total_power,
+                                              'virtual_total_power':self.adapter.virtual_total_power,
+                                              'real_total_power':self.adapter.real_total_power,
+                                              'total_real_kwh_since_midnight':self.adapter.total_real_kwh_since_midnight,
+                                              'total_virtual_kwh_since_midnight':self.adapter.total_virtual_kwh_since_midnight,
+                                              'previous_hour_day_delta':self.adapter.persistent_data['previous_hour_day_delta'],
+                                              'data_blur':self.adapter.persistent_data['data_blur']
+                                              })
+                        )
+                    
                     
                     # Save the JWT token so that the addon can access things data
                     if action == 'save_token':
@@ -242,8 +267,8 @@ class EnergyUseAPIHandler(APIHandler):
                                 if self.DEBUG:
                                     print("removed device from ignore list")
                             
-                            state = True
                             self.adapter.save_persistent_data()
+                            state = True
                             
     
                         return APIResponse(

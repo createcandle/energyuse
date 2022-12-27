@@ -6,7 +6,6 @@
 
 #extension-energyuse-view {
   	height: 100%; /*calc(100% - 7.6rem);*/
-  	box-sizing: border-box;
 	overflow: auto;
 	position: absolute;
 	top: 7.6rem;
@@ -15,9 +14,11 @@
     box-sizing:border-box;
 }
 
+/*
 #extension-energyuse-view * {
     box-sizing:border-box;
 }
+*/
 
 
 #extension-energyuse-content {
@@ -54,17 +55,12 @@
     display: block;
     padding: 1rem;
     padding-left: 3.8rem;
-    font-size: 1.8rem;
     background-size: 2.8rem;
     background-repeat: no-repeat;
     background-position: 0;
     background-image: url('../images/menu-icon.svg');
 	width:15rem;
-	margin:0 auto;
 }
-
-
-
 
 #extension-energyuse-view label{
     display:block;
@@ -83,6 +79,7 @@
     border: none;
     padding: 1.6rem 1rem;
     border-radius: 0.5rem;
+    box-sizing:border-box;
 }
 
 #extension-energyuse-view input[type=number]{
@@ -115,7 +112,7 @@
     overflow: hidden;
     font-size: 0;
     width:60%;
-    max-width: 60rem;
+    max-width: 40rem;
     margin: 4rem auto 0 auto;
     display:flex;
 }
@@ -152,10 +149,6 @@ body #extension-energyuse-view .extension-energyuse-tab-selected {
 
 
 
-
-
-
-
 /*  PAGES  */
 
 
@@ -168,15 +161,12 @@ body #extension-energyuse-view .extension-energyuse-tab-selected {
     margin: 2rem auto;
 }
 
-#extension-energyuse-tabs-container > div{
-    /*padding:2rem;*/
-}
-
 
 #extension-energyuse-list{
 	width:auto;
 	display:flex;
     flex-direction:column;
+    overflow-x:auto;
 }
 
 
@@ -189,7 +179,7 @@ body #extension-energyuse-view .extension-energyuse-tab-selected {
 .extension-energyuse-vlak{
     background-color:rgba(0,0,0,.15);
     border-radius:.5rem;
-    padding:1rem;
+    padding:2rem;
 }
 
 
@@ -282,8 +272,6 @@ body #extension-energyuse-view .extension-energyuse-tab-selected {
 	/*background-color: #46769C;*/
     background-color:rgba(0,0,0,.2);
 	border-radius:.5rem;
-    
-	border-radius: .5rem;
 	position: relative;
 	width:auto;
 	/*margin-bottom: 1rem;
@@ -313,7 +301,7 @@ body #extension-energyuse-view .extension-energyuse-tab-selected {
 
 .extension-energyuse-item-stack-device{
     display:flex;
-    justify-content:right;
+    justify-content:flex-end;
     border-bottom:1px solid rgba(255,255,255,.2);
 }
 
@@ -420,7 +408,7 @@ body #extension-energyuse-view .extension-energyuse-tab-selected {
 #extension-energyuse-totals{
     display:flex;
     flex-wrap:wrap;
-    justify-content:space-evenly;
+    justify-content:space-between;
     margin: 4rem 0;
 }
 #extension-energyuse-totals > div{
@@ -428,7 +416,13 @@ body #extension-energyuse-view .extension-energyuse-tab-selected {
     flex-direction:column;
     /*justify-content:center;*/
     align-items:center;
+    margin-bottom:4rem;
 }
+#extension-energyuse-totals > div > span{
+    display: block;
+    text-align: center;
+}
+
 
 .extension-energyuse-big-number-container{
     width:14rem;
@@ -452,63 +446,7 @@ body #extension-energyuse-view .extension-energyuse-tab-selected {
 }
 
 
-
-/*
-.extension-energyuse-item + .extension-energyuse-week-total{
-    background-color:transparent;
-}
-*/
-
-
 /*  BUTTONS  */
-
-
-/*
-#extension-energyuse-back-button{
-    top: 2rem;
-    left: 2rem;
-    position: fixed;
-    top:2rem;
-    left:2rem;
-    width: 5.6rem;
-    height: 5.6rem;
-    border-radius: 2.8rem;
-    padding: 0;
-    background-color: #5d9bc7;
-    border: none;
-    background-size: cover;
-    background-repeat: no-repeat;
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    outline: 0;
-    z-index: 1000;
-    cursor: default;
-    overflow:hidden;
-    opacity:1;
-    cursor:pointer;
-    background: #5d9bc7 no-repeat center/100% url(/images/back.png);
-    box-shadow: 0 1px 3px rgb(0 0 0 / 6%), 0 1px 2px rgb(0 0 0 / 12%);
-}
-#extension-energyuse-back-button:hover{
-    background-color: #6dabd7;
-}
-
-
-#extension-energyuse-add-button{
-	position: fixed;
-	bottom: 2rem;
-	right: 2rem;
-	background-image: url(/images/add.svg);
-	border-radius: 2.8rem;
-    cursor:pointer;
-}
-*/
-
-
-
-
 
 .extension-energyuse-item-total{
     font-size:3rem;
@@ -702,8 +640,32 @@ body td[class^="extension-energyuse-day-sum-"] {
     display:none;
 }
 
-.show-cost #extension-energyuse-today-so-far-container .extension-energyuse-big-unit{
+.show-cost #extension-energyuse-today-real-kwh-container .extension-energyuse-big-unit,
+.show-cost #extension-energyuse-today-combined-kwh-container .extension-energyuse-big-unit{
     display:none;
+}
+
+
+.extension-energyuse-wattage-device-value:not(:empty)::after{
+    content:'W';
+    padding-left:.5rem;
+    opacity:.6;
+}
+
+.extension-energyuse-today-kwh-value{
+    text-align:right;
+    display:inline-block;
+}
+
+.show-cost .extension-energyuse-today-kwh-value{
+    display:none;
+}
+
+
+.extension-energyuse-today-kwh-value:not(:empty)::after{
+    content:'kWh';
+    padding-left:.5rem;
+    opacity:.6;
 }
 
 
@@ -727,10 +689,6 @@ body td[class^="extension-energyuse-day-sum-"] {
     display:table-cell;
 }
 
-#extension-energyuse-show-predictions-button{
-
-}
-
 .extension-energyuse-column-yearly .extension-energyuse-kwh,
 .extension-energyuse-column-yearly .extension-energyuse-cost{
     filter: blur(.8px);
@@ -744,20 +702,20 @@ body td[class^="extension-energyuse-day-sum-"] {
 
 
 
-/*  Live Wattage  */
+/*  TODAY DETAILS  */
 
 #extension-energyuse-real-wattage-container,
 #extension-energyuse-total-wattage-container{
     cursor:pointer;
 }
 
-#extension-energyuse-real-wattage-container .extension-energyuse-big-number-container:hover,
-#extension-energyuse-total-wattage-container .extension-energyuse-big-number-container:hover{
+div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-number-container:hover{
     background-color: rgba(0,0,0,.3);
+    cursor:pointer;
 }
 
-#extension-energyuse-wattage-details:not(:empty)::before{
-    content:'Live power consumption';
+#extension-energyuse-today-details:not(:empty)::before{
+    content:'Today';
     display:block;
     font-size:2rem;
     margin-top:2rem;
@@ -765,26 +723,38 @@ body td[class^="extension-energyuse-day-sum-"] {
     background-color:rgba(0,0,0,.1);
 }
 
-#extension-energyuse-wattage-details:not(:empty){
+#extension-energyuse-today-details:not(:empty){
     background-color:rgba(0,0,0,.1);
     border-radius:.5rem;
     max-width: calc(50rem - 2rem);
     margin:4rem auto;
 }
 
-#extension-energyuse-wattage-details > div{
+#extension-energyuse-today-details > div{
     padding:1rem 2rem;
     display:flex;
     justify-content:space-between;
     align-items:center;
 }
 
-#extension-energyuse-wattage-details > div > span{
+#extension-energyuse-today-details > div:not(:last-of-type){
+    border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+#extension-energyuse-today-details > div > span{
+    display:flex;
+}
+
+
+#extension-energyuse-today-details .extension-energyuse-today-kwh-and-cost{
+    width:12rem;
+    min-width:12rem;
     display:inline-block;
+    text-align:right;
 }
 
 /*
-#extension-energyuse-wattage-details > div:not(:last-of-type){
+#extension-energyuse-today-details > div:not(:last-of-type){
     border-bottom:1px dotted rgba(255,255,255,.2);
 }
 */
@@ -843,7 +813,7 @@ body td[class^="extension-energyuse-day-sum-"] {
 .extension-energyuse-virtual-item{
     background-color:rgba(0,0,0,.1);
     margin: .5rem 0;
-    padding:1rem 2rem;
+    padding:1rem;
     display:flex;
     justify-content:space-between;
     align-items:center;
@@ -851,9 +821,13 @@ body td[class^="extension-energyuse-day-sum-"] {
 
 .extension-energyuse-virtual-item-name{
     font-weight:bold;
-    min-width:20rem;
+    min-width:10rem;
 }
 
+
+.extension-energyuse-virtual-item-kwh{
+    padding-right:.5rem;
+}
 
 .extension-energyuse-virtual-item-kwh::after{
     content:' kWh per day';
@@ -962,10 +936,6 @@ body td[class^="extension-energyuse-day-sum-"] {
 	.extension-energyuse-line2 > div{
 		width:auto;
 	}
-    
-    .extension-energyuse-vlak{
-        padding:2rem;
-    }
 
     #extension-energyuse-view button {
         padding: 1rem 2rem;
@@ -977,6 +947,13 @@ body td[class^="extension-energyuse-day-sum-"] {
     th:not(:empty),
     td:not(:empty){
         padding:.5rem;
+    }
+    
+    .extension-energyuse-virtual-item-name{
+        min-width:20rem;
+    }
+    .extension-energyuse-virtual-item{;
+        padding:1rem 2rem;
     }
 }
 
@@ -1000,16 +977,20 @@ body td[class^="extension-energyuse-day-sum-"] {
         padding:4rem;
         border-radius:1rem;
     }
-    
-	/*
-	.extension-energyuse-item{
-		width: calc(50% - 4rem);
-		margin-left: 2rem;
-		margin-right: 2rem;
-	}
-	*/
 	
 }
+
+@media screen and (max-width: 800px) {
+    .extension-energyuse-wattage-and-kwh{
+        display:flex;
+        flex-direction:column;
+        align-items:end;
+    }
+    #extension-energyuse-today-details > div{
+        align-items: normal;
+    }
+}
+
 
 
 
