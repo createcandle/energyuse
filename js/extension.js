@@ -480,13 +480,8 @@
                 console.log("in generate_today_details. this.show_today_details: ", this.show_today_details);
             }
             if(this.live == null){
-                console.warn("this.live is still null");
+                console.warn("energy use: generate_today_details: this.live is still null");
                 return;
-            }else{
-                
-                //this.live.sort((a, b) => (a.title.toLowerCase() > b.title.toLowerCase()) ? 1 : -1) // sort alphabetically
-                
-                console.log("This.live: ", this.live);
             }
             
             this.live_array = [];
@@ -497,7 +492,7 @@
                 }
             }
             this.live_array.sort((a, b) => (a.title.toLowerCase() > b.title.toLowerCase()) ? 1 : -1) // sort alphabetically
-            console.log("sorted this.live_array: ", this.live_array);
+            //console.log("sorted this.live_array: ", this.live_array);
             
             
             try{
@@ -514,7 +509,7 @@
                 const current_timestamp = Math.floor(Date.now() / 1000);
                 
                 for(let w = 0; w < this.live_array.length; w++){
-                    console.log("this.live_array[w]: ", this.live_array[w]);
+                    //console.log("this.live_array[w]: ", this.live_array[w]);
                     
                     //const device_id = keys[w];
                     //const title = this.live[device_id]['title'];
