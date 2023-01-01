@@ -234,22 +234,31 @@
             });
             
             document.getElementById('extension-energyuse-add-virtual-watt').addEventListener('keyup', (event) => {
-                console.log("watt value changed: ", event);
+                if(this.debug){
+                    console.log("watt value changed: ", event);
+                }
                 const kwh_from_watt = (document.getElementById('extension-energyuse-add-virtual-watt').value * 24) / 1000;
-                console.log("kwh from watt: ", kwh_from_watt);
+                if(this.debug){
+                    console.log("kwh from watt: ", kwh_from_watt);
+                }
                 document.getElementById('extension-energyuse-add-virtual-kwh').value = Math.round(kwh_from_watt * 10) / 10;
             });
             
             document.getElementById('extension-energyuse-add-virtual-kwh').addEventListener('keyup', (event) => {
-                console.log("kwh value changed: ", event);
+                if(this.debug){
+                    console.log("kwh value changed: ", event);
+                }
                 const watt_from_kwh = (document.getElementById('extension-energyuse-add-virtual-kwh').value * 1000) / 24;
-                console.log("watt_from_kwh: ", watt_from_kwh);
+                if(this.debug){
+                    console.log("watt_from_kwh: ", watt_from_kwh);
+                }
                 document.getElementById('extension-energyuse-add-virtual-watt').value = Math.round(watt_from_kwh * 10) / 10;
             });
             
             document.getElementById('extension-energyuse-show-cost-button').addEventListener('click', (event) => {
-                console.log("document.getElementById('extension-energyuse-kwh-price').value: ", document.getElementById('extension-energyuse-kwh-price').value);
-                
+                if(this.debug){
+                    console.log("document.getElementById('extension-energyuse-kwh-price').value: ", document.getElementById('extension-energyuse-kwh-price').value);
+                }
                 
                 if(document.getElementById('extension-energyuse-overview-page').classList.contains('show-cost') ){
                     document.getElementById('extension-energyuse-show-cost-button').innerText = 'Show cost';
@@ -270,7 +279,9 @@
                 				{'action':'save_kwh_price','kwh_price':this.current_energy_price}
 
                 	        ).then((body) => {
-                                console.log("energy use save_kwh_price response: ", body);
+                                if(this.debug){
+                                    console.log("energy use debug: save_kwh_price response: ", body);
+                                }
                 	        }).catch((e) => {
                 	  			console.log("Error saving kwh_price: ", e);
                 	        });
@@ -414,7 +425,9 @@
                     }
                 
                     if(kwh_value == null){
-                        console.log("not showing combined kWh value because of data blur setting");
+                        if(this.debug){
+                            console.log("not showing combined kWh value because of data blur setting");
+                        }
                         document.getElementById('extension-energyuse-today-combined-kwh-container').style.display = 'none';
                     }
                     else{
@@ -442,7 +455,9 @@
                 }
                 
                 if(kwh_value == null){
-                    console.log("not showing real kWh value (because of data blur setting or not needed)");
+                    if(this.debug){
+                        console.log("not showing real kWh value (because of data blur setting or not needed)");
+                    }
                     document.getElementById('extension-energyuse-today-real-kwh-container').style.display = 'none';
                 }
                 else{
@@ -804,7 +819,7 @@
                     // virtual item data
                     const virtual = this.persistent_data.virtual[id];
                     if(this.debug){
-                        console.log("virtual: ", virtual);
+                        console.log("enegy use: virtual: ", virtual);
                     }
                     if(typeof virtual['deleted_time'] != 'undefined'){
                         continue;
@@ -1362,11 +1377,11 @@
                                 week_device_titles.push(week[device_id]['title']);
                             }
                             else{
-                                console.warn("energy use: add_week: missing thing title: ", week[device_id]);
+                                console.log("energy use: add_week: missing thing title: ", week[device_id]);
                             }
                         }
                         else{
-                            console.error("week[device_id] missing? how is this possible?: ", week);
+                            console.warn("week[device_id] missing? how is this possible?: ", device_id, week);
                         }
                         
                     }
@@ -1399,6 +1414,14 @@
                         //console.log("device_id in week: ", device_id);
                         //console.log("week[device_id]['title']: ", week[device_id]['title']);
                         
+                        if(typeof week[device_id] == 'undefined'){
+                            console.log("energy use: week[device_id] was undefined");
+                            continue;
+                        }
+                        if(typeof week[device_id]['title'] == 'undefined'){
+                            console.log("energy use: week[device_id][title] was undefined");
+                            continue;
+                        }
                         if(week[device_id]['title'] == week_device_titles[sorted_device_title]){
                             //console.log("BINGO");
                             //let device_id = week_keys[w];
