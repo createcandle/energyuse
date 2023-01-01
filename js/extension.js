@@ -1395,6 +1395,8 @@
                 if(this.debug){
                     //console.log('sorted week_keys: ', week_device_titles);
                 }
+                var maximum_days_used = 0;
+                var yearly_total = 0;
                 for (const sorted_device_title in week_device_titles) {
                     //console.log("sorted_device_title: ", week_device_titles[sorted_device_title]);
                     
@@ -1520,8 +1522,12 @@
                                         output += '</td>';
                                     }
                         
-                        
                                 }
+                                
+                                if(days_used > maximum_days_used){
+                                    maximum_days_used = days_used;
+                                }
+                                
                     
                                 //console.log(device['title'] + " start and end kwh: ", start_kwh, end_kwh);
                     
@@ -1545,22 +1551,24 @@
                                     if(this.showing_cost && this.current_energy_price != null){
                                         output += '<span class="extension-energyuse-cost">' + this.rounder( device_kwh_total * this.current_energy_price ) + '</span>';
                                     }
-                        
+                                    
                                     // Yearly extrapolation
                                     //const average_per_day = week_total / days_used;
                                     //const yearly_kwh_prediction = average_per_day * 365;
-                                    const yearly_kwh_prediction = device_kwh_total * 52.17857;
+                                    
+                                    const week_scale_factor = 7 / maximum_days_used; // if there is only data for part of the week, then compensate for that in the calculation too.
+                                    const device_yearly_kwh_prediction = (device_kwh_total * week_scale_factor) * 52.17857;
                                     //console.log("average kwh per day: ", average_per_day);
                                     //console.log("yearly_kwh_prediction: ", yearly_kwh_prediction);
-                        
+                                    yearly_total = yearly_total + device_yearly_kwh_prediction;
                         
                                     output += '<td class="extension-energyuse-device-yearly extension-energyuse-column-yearly">';
-                                    output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(yearly_kwh_prediction) + '</span>';
+                                    output += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(device_yearly_kwh_prediction) + '</span>';
                         
                                     if(this.showing_cost && this.current_energy_price != null){
-                                        output += '<span class="extension-energyuse-cost">' + this.rounder( yearly_kwh_prediction * this.current_energy_price ) + '</span>';
+                                        output += '<span class="extension-energyuse-cost">' + this.rounder( device_yearly_kwh_prediction * this.current_energy_price ) + '</span>';
                                     }
-                        
+                                    
                                     output += '</td>';
                                     output += '<tr>';
                                 }
@@ -1575,6 +1583,11 @@
                         }
                     }
                 }
+                
+                if(this.debug){
+                    console.log("maximum_days_used: ", maximum_days_used);
+                }
+                
             
                 // wrap header and footer around output
                 if(at_least_one_device_was_used){
@@ -1627,12 +1640,12 @@
                 
                     // Add yearly extrapolation column. Not currently used, could be confusing/overwhelming.
                     footer_html += '<td class="extension-energyuse-yearly-total extension-energyuse-column-yearly">';
-                    /*
+                    
                     footer_html += '<span class="extension-energyuse-kwh" title="kWh">' + this.rounder(yearly_total) + '</span>';
                     if(this.showing_cost && this.current_energy_price != null){
                         footer_html += '<span class="extension-energyuse-cost">' + this.rounder( yearly_total * this.current_energy_price ) + '</span>';
                     }
-                    */
+                    
                     footer_html += '</td>';
                 
                     footer_html += '</tr>';

@@ -323,7 +323,6 @@ body #extension-energyuse-view .extension-energyuse-tab-selected {
 
 #extension-energyuse-view a{
 	color:white;
-	font-weight:bold;
     text-decoration:none;
 }
 
@@ -700,6 +699,9 @@ body td[class^="extension-energyuse-day-sum-"] {
     opacity:1;
 }
 
+#extension-energyuse-view td.extension-energyuse-yearly-total.extension-energyuse-column-yearly{
+    vertical-align:middle;
+}
 
 
 /*  TODAY DETAILS  */

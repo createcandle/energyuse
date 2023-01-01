@@ -1640,7 +1640,7 @@ class EnergyUseDevice(Device):
         self.name = 'Energy use'
         self.title = 'Energy use'
         self.description = 'Calculate the total electricty used by energy monitoring power sockets'
-        self._type = ['EnergyMonitor','MultiLevelSensor']
+        self._type = ['EnergyMonitor']
         #self.connected = False
 
         try:
@@ -1710,7 +1710,7 @@ class EnergyUseDevice(Device):
                             self,
                             "today",
                             {
-                                '@type': 'LevelProperty',
+                                #'@type': 'LevelProperty',
                                 'title': 'Today',
                                 'type': 'number',
                                 'readOnly': True,
