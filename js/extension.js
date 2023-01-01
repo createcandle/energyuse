@@ -1377,11 +1377,15 @@
                                 week_device_titles.push(week[device_id]['title']);
                             }
                             else{
-                                console.log("energy use: add_week: missing thing title: ", week[device_id]);
+                                if(this.debug){
+                                    console.log("energy use: add_week: missing thing title: ", week[device_id]);
+                                }
                             }
                         }
                         else{
-                            console.warn("week[device_id] missing? how is this possible?: ", device_id, week);
+                            if(this.debug){
+                                console.warn("week[device_id] missing? how is this possible?: ", device_id, week);
+                            }
                         }
                         
                     }
@@ -1415,11 +1419,15 @@
                         //console.log("week[device_id]['title']: ", week[device_id]['title']);
                         
                         if(typeof week[device_id] == 'undefined'){
-                            console.log("energy use: week[device_id] was undefined");
+                            if(this.debug){
+                                console.log("energy use: week[device_id] was undefined");
+                            }
                             continue;
                         }
                         if(typeof week[device_id]['title'] == 'undefined'){
-                            console.log("energy use: week[device_id][title] was undefined");
+                            if(this.debug){
+                                console.log("energy use: week[device_id][title] was undefined");
+                            }
                             continue;
                         }
                         if(week[device_id]['title'] == week_device_titles[sorted_device_title]){
