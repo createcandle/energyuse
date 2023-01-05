@@ -728,7 +728,7 @@ div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-num
 #extension-energyuse-today-details:not(:empty){
     background-color:rgba(0,0,0,.1);
     border-radius:.5rem;
-    max-width: calc(50rem - 2rem);
+    max-width: 100%;
     margin:4rem auto;
 }
 
@@ -857,7 +857,45 @@ div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-num
 }
 
 
+/*  sparklines  */
 
+
+.extension-energyuse-live-sparkline{
+    display:none;
+    margin:0 1rem;
+}
+
+/* just the line */
+.extension-energyuse-sparkline {
+  stroke: white
+  fill: none;
+}
+
+/* line with highlight area */
+.extension-energyuse-sparkline {
+  stroke: white
+  fill: rgba(255, 255, 255, .3);
+}
+
+/* change the spot color */
+.extension-energyuse-sparkline--spot {
+  stroke: blue;
+  fill: blue;
+}
+
+/* change the cursor color */
+.extension-energyuse-sparkline--cursor {
+  stroke: orange;
+}
+
+/* style fill area and line colors using specific class name */
+.extension-energyuse-sparkline--fill {
+  fill: rgba(255, 255, 255, .3);
+}
+
+.extension-energyuse-sparkline--line {
+  stroke: white;
+}
 
 
 /*  spinner  */
@@ -957,6 +995,14 @@ div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-num
     .extension-energyuse-virtual-item{;
         padding:1rem 2rem;
     }
+    
+    .extension-energyuse-wattage-device-value{
+        min-width:12rem;
+    }
+    
+    .extension-energyuse-live-sparkline{
+        display:inline;
+    }
 }
 
 
@@ -979,6 +1025,10 @@ div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-num
         padding:4rem;
         border-radius:1rem;
     }
+    
+    #extension-energyuse-today-details:not(:empty){
+        max-width: calc(100% - 10rem);
+    }
 	
 }
 
@@ -991,6 +1041,7 @@ div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-num
     #extension-energyuse-today-details > div{
         align-items: normal;
     }
+    
 }
 
 

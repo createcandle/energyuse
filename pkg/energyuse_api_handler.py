@@ -119,6 +119,7 @@ class EnergyUseAPIHandler(APIHandler):
                           content_type='application/json',
                           content=json.dumps({
                                               'live':self.adapter.live,
+                                              'last_ten_measurements':self.adapter.last_ten_measurements,
                                               'real_total_power':self.adapter.real_total_power,
                                               'virtual_total_power':self.adapter.virtual_total_power,
                                               'real_total_power':self.adapter.real_total_power,

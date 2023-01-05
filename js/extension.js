@@ -37,6 +37,7 @@
             this.live = null;
             this.live_array = [];
             this.busy_polling = false;
+            this.last_ten_measurements = {};
 
             setTimeout(() => {
                 const jwt = localStorage.getItem('jwt');
@@ -317,7 +318,7 @@
             
             // get wattage interval
             this.wattage_interval = setInterval(() =>{
-                this.get_today();
+                //this.get_today();
             },5000);
 		}   
 		
@@ -347,7 +348,7 @@
         
         
         //
-        //  GET TODAY
+        //  GET TODAY POLL
         //
         // Get data from addon backend about how much energy the devices are using at the moment, and show that value in the big circles.
         // Also creates a dictionary with that data to be used for creating the small table if the user wants to view that
@@ -374,6 +375,12 @@
                     this.live = body.live;
                 }
                 
+                if(typeof body.last_ten_measurements != 'undefined'){
+                    this.last_ten_measurements = body.last_ten_measurements;
+                    if(this.debug){
+                        console.log("this.last_ten_measurements: ", this.last_ten_measurements);
+                    }
+                }
                 
                 if(body.data_blur == 'Off' || body.data_blur == '1 minute'){
                     document.getElementById('extension-energyuse-real-wattage').innerText = this.rounder(body.real_total_power);
@@ -484,10 +491,238 @@
         
         
         
+        // From https://github.com/glaszig/sparkline under MIT licence
+        generate_sparkline(svg_el,data){
+            
+            function getY(max, height, diff, value) {
+              if (max === 0) return height * 1.0
+              return parseFloat((height - (value * height / max) + diff).toFixed(2));
+            }
+
+            function removeChildren(svg) {
+              [...svg.querySelectorAll("*")].forEach(element => svg.removeChild(element));
+            }
+
+            function defaultFetch(entry) {
+              return entry.value;
+            }
+
+            function buildElement(tag, attrs) {
+              const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
+
+              for (let name in attrs) {
+                element.setAttribute(name, attrs[name]);
+              }
+
+              return element;
+            }
+
+
+            function sparkline(svg, entries, options) {
+              console.log("in sparkline function. svg and entries: ", svg, entries);
+              removeChildren(svg);
+
+              if (entries.length <= 1) {
+                return;
+              }
+
+              options = options || {};
+
+              if (typeof(entries[0]) === "number") {
+                entries = entries.map(entry => {
+                  return {value: entry};
+                });
+              }
+
+              // This function will be called whenever the mouse moves
+              // over the SVG. You can use it to render something like a
+              // tooltip.
+              const onmousemove = options.onmousemove;
+
+              // This function will be called whenever the mouse leaves
+              // the SVG area. You can use it to hide the tooltip.
+              const onmouseout = options.onmouseout;
+
+              // Should we run in interactive mode? If yes, this will handle the
+              // cursor and spot position when moving the mouse.
+              const interactive = ("interactive" in options) ? options.interactive : !!onmousemove;
+
+              // Define how big should be the spot area.
+              const spotRadius = options.spotRadius || 2;
+              const spotDiameter = spotRadius * 2;
+
+              // Define how wide should be the cursor area.
+              const cursorWidth = options.cursorWidth || 2;
+
+              // Get the stroke width; this is used to compute the
+              // rendering offset.
+              const strokeWidth = parseFloat(svg.attributes["stroke-width"].value);
+
+              // By default, data must be formatted as an array of numbers or
+              // an array of objects with the value key (like `[{value: 1}]`).
+              // You can set a custom function to return data for a different
+              // data structure.
+              const fetch = options.fetch || defaultFetch;
+
+              // Retrieve only values, easing the find for the maximum value.
+              const values = entries.map(entry => fetch(entry));
+
+              // The rendering width will account for the spot size.
+              const width = parseFloat(svg.attributes.width.value) - spotDiameter * 2;
+
+              // Get the SVG element's full height.
+              // This is used
+              const fullHeight = parseFloat(svg.attributes.height.value);
+
+              // The rendering height accounts for stroke width and spot size.
+              const height = fullHeight - (strokeWidth * 2) - spotDiameter;
+
+              // The maximum value. This is used to calculate the Y coord of
+              // each sparkline datapoint.
+              const max = Math.max(...values);
+              //console.log("sparklines function: max: ", max);
+              // Some arbitrary value to remove the cursor and spot out of
+              // the viewing canvas.
+              const offscreen = -1000;
+
+              // Cache the last item index.
+              const lastItemIndex = values.length - 1;
+
+              // Calculate the X coord base step.
+              const offset = width / lastItemIndex;
+
+              // Hold all datapoints, which is whatever we got as the entry plus
+              // x/y coords and the index.
+              const datapoints = [];
+
+              // Hold the line coordinates.
+              const pathY = getY(max, height, strokeWidth + spotRadius, values[0]);
+              let pathCoords = `M${spotDiameter} ${pathY}`;
+
+              values.forEach((value, index) => {
+                const x = index * offset + spotDiameter;
+                const y = getY(max, height, strokeWidth + spotRadius, value);
+
+                datapoints.push(Object.assign({}, entries[index], {
+                  index: index,
+                  x: x,
+                  y: y
+                }));
+
+                pathCoords += ` L ${x} ${y}`;
+              });
+
+              const path = buildElement("path", {
+                class: "extension-energyuse-sparkline--line",
+                d: pathCoords,
+                fill: "none"
+              });
+
+              let fillCoords = `${pathCoords} V ${fullHeight} L ${spotDiameter} ${fullHeight} Z`;
+
+              const fill = buildElement("path", {
+                class: "extension-energyuse-sparkline--fill",
+                d: fillCoords,
+                stroke: "none"
+              });
+
+              svg.appendChild(fill);
+              svg.appendChild(path);
+
+              if (!interactive) {
+                return;
+              }
+
+              const cursor = buildElement("line", {
+                class: "extension-energyuse-sparkline--cursor",
+                x1: offscreen,
+                x2: offscreen,
+                y1: 0,
+                y2: fullHeight,
+                "stroke-width": cursorWidth
+              });
+
+              const spot = buildElement("circle", {
+                class: "extension-energyuse-sparkline--spot",
+                cx: offscreen,
+                cy: offscreen,
+                r: spotRadius
+              });
+
+              svg.appendChild(cursor);
+              svg.appendChild(spot);
+
+              const interactionLayer = buildElement("rect", {
+                width: svg.attributes.width.value,
+                height: svg.attributes.height.value,
+                style: "fill: transparent; stroke: transparent",
+                class: "extension-energyuse-sparkline--interaction-layer",
+              });
+              svg.appendChild(interactionLayer);
+
+              interactionLayer.addEventListener("mouseout", event => {
+                cursor.setAttribute("x1", offscreen);
+                cursor.setAttribute("x2", offscreen);
+
+                spot.setAttribute("cx", offscreen);
+
+                if (onmouseout) {
+                  onmouseout(event);
+                }
+              });
+
+              interactionLayer.addEventListener("mousemove", event => {
+                const mouseX = event.offsetX;
+
+                let nextDataPoint = datapoints.find(entry => {
+                  return entry.x >= mouseX;
+                });
+
+                if (!nextDataPoint) {
+                  nextDataPoint = datapoints[lastItemIndex];
+                }
+
+                let previousDataPoint = datapoints[datapoints.indexOf(nextDataPoint) - 1];
+                let currentDataPoint;
+                let halfway;
+
+                if (previousDataPoint) {
+                  halfway = previousDataPoint.x + ((nextDataPoint.x - previousDataPoint.x) / 2);
+                  currentDataPoint = mouseX >= halfway ? nextDataPoint : previousDataPoint;
+                } else {
+                  currentDataPoint = nextDataPoint;
+                }
+
+                const x = currentDataPoint.x;
+                const y = currentDataPoint.y;
+
+                spot.setAttribute("cx", x);
+                spot.setAttribute("cy", y);
+
+                cursor.setAttribute("x1", x);
+                cursor.setAttribute("x2", x);
+
+                if (onmousemove) {
+                  onmousemove(event, currentDataPoint);
+                }
+              });
+              //return svg;
+            }
+            
+            //return sparkline(svg_el,data);
+            
+            sparkline(svg_el,data);
+            return svg_el;
+            
+            //return element; //
+            
+        }
+        
+        
         
         
         //
-        //  GENERATE TODAY DETAILS
+        //  GENERATE TODAY LIVE DETAILS
         //
         // Show live power consumption in a small table. Assumes this.device_details has already been created
         generate_today_details(){
@@ -497,6 +732,9 @@
             if(this.live == null){
                 console.warn("energy use: generate_today_details: this.live is still null");
                 return;
+            }
+            if(this.debug){
+                console.log("generate_today_details: live: ", this.live);
             }
             
             this.live_array = [];
@@ -524,10 +762,14 @@
                 const current_timestamp = Math.floor(Date.now() / 1000);
                 
                 for(let w = 0; w < this.live_array.length; w++){
-                    //console.log("this.live_array[w]: ", this.live_array[w]);
+                    if(this.debug){
+                        console.log("this.live_array[w]: ", this.live_array[w]);
+                    }
+                    
                     
                     //const device_id = keys[w];
                     //const title = this.live[device_id]['title'];
+                    const id = this.live_array[w]['id'];
                     const title = this.live_array[w]['title'];
                     
                     
@@ -559,6 +801,43 @@
                     
                     var today_device_html =  '<span class="extension-energyuse-wattage-device-title">' + title + '</span>';
                         today_device_html += '<span class="extension-energyuse-wattage-and-kwh">';
+                        
+                        try{
+                            let spark_el = document.createElement('svg');
+                            spark_el.setAttribute('width','100');
+                            spark_el.setAttribute('height','20');
+                            spark_el.setAttribute('stroke-width','2');
+                            spark_el.setAttribute('alt','Last 10 power measurements');
+                            spark_el.setAttribute('title','Last 10 power measurements');
+                            spark_el.classList.add('extension-energyuse-live-sparkline');
+                        
+                            //console.log("last_ten_measuements: id: ", id, this.last_ten_measurements);
+                            //console.log("this.last_ten_measurements[id]: ", this.last_ten_measurements[id]);
+                            if(typeof this.last_ten_measurements[id] != 'undefined'){
+                                if(this.last_ten_measurements[id].length > 2){
+                                    var all_zeros = true;
+                                    for(let s = 0; s < this.last_ten_measurements[id].length; s++){
+                                        if(this.last_ten_measurements[id][s] != 0){
+                                            all_zeros = false;
+                                        }
+                                    }
+                                    if(all_zeros == false){
+                                    
+                                        spark_el.classList.add('extension-energyuse-live-sparkline-active');
+                                        //sparkline(spark_el, this.last_ten_measurements[id] );
+                                        spark_el = this.generate_sparkline(spark_el,this.last_ten_measurements[id]);
+                                        
+                                        //'<svg class="sparkline" width="100" height="30" stroke-width="3"></svg>';
+                                    }
+                                
+                                }
+                            }
+                            today_device_html += spark_el.outerHTML;
+                        }
+                        catch(e){
+                            console.error("Error generating sparkline: ", e);
+                        }
+                        
                         today_device_html += '<span class="extension-energyuse-wattage-device-value">' + this.rounder(this.live_array[w].power) + '</span>';
                         today_device_html += '<span class="extension-energyuse-today-kwh-and-cost"><span class="extension-energyuse-today-kwh-value">' + today_kwh_value + '</span>' + today_kwh_cost_html + '</span>'
                         today_device_html += '</span>';

@@ -95,9 +95,12 @@ class EnergyUseAdapter(Adapter):
         
         self.total_real_kwh_since_midnight = None # total for the dict above, updated every few seconds
         self.total_virtual_kwh_since_midnight = None # total for the dict above, updated every few seconds
+
+        self.previous_combined_kwh_since_midnight = 0
         
         self.last_power_data_timestamp = 0
         
+        self.last_ten_measurements = {}
         
         # Get persistent data
         try:
@@ -641,6 +644,15 @@ class EnergyUseAdapter(Adapter):
                                                                             live[thing_id]['virtual'] = False
                                                                             live[thing_id]['connected'] = True
                                                                             
+                                                                            if not thing_id in self.last_ten_measurements:
+                                                                                self.last_ten_measurements[thing_id] = []
+                                                                            
+                                                                            self.last_ten_measurements[thing_id].append(round(value,2))
+                                                                                
+                                                                            if len(self.last_ten_measurements[thing_id]) > 10:
+                                                                                self.last_ten_measurements[thing_id].pop(0)
+                                                                            
+                                                                            
                                                                             if ignored == False:
                                                                                 local_real_total_power += value
                                                                                 if self.DEBUG2:
@@ -899,16 +911,18 @@ class EnergyUseAdapter(Adapter):
                         self.total_virtual_kwh_since_midnight = round(local_total_virtual_kwh_since_midnight,3)
                         
                         combined_kwh_since_midnight = local_total_virtual_kwh_since_midnight + local_total_real_kwh_since_midnight
-                        if self.DEBUG:
-                            print("combined_kwh_since_midnight: " + str(combined_kwh_since_midnight));
-                        if self.persistent_data['data_blur'] == 'Off' or self.persistent_data['data_blur'] == '1 minute':
-                            self.set_value_on_thing('today', round(combined_kwh_since_midnight, 2)) 
-                        else:
-                            self.set_value_on_thing('today',None)
-                        # privacy risk to update this so frequently? "I can see you turned on the oven right after I reminded you, and not before". 
-                        # But wattage is already updated frequenly, and reveals that level of detail too
-                        # TODO: implement data blur and data mute inside the set_value_on_thing method
                         
+                        if combined_kwh_since_midnight > self.previous_combined_kwh_since_midnight:
+                            self.previous_combined_kwh_since_midnight = combined_kwh_since_midnight
+                            if self.DEBUG:
+                                print("combined_kwh_since_midnight: " + str(combined_kwh_since_midnight));
+                            if self.persistent_data['data_blur'] == 'Off' or self.persistent_data['data_blur'] == '1 minute':
+                                self.set_value_on_thing('today', round(combined_kwh_since_midnight, 2)) 
+                            else:
+                                self.set_value_on_thing('today',None)
+                            # privacy risk to update this so frequently? "I can see you turned on the oven right after I reminded you, and not before". 
+                            # But wattage is already updated frequenly, and reveals that level of detail too
+                            # TODO: implement data blur and data mute inside the set_value_on_thing method
                         
                         # save to updated dictionary that polling from the UI will read
                         self.live = live
@@ -926,7 +940,8 @@ class EnergyUseAdapter(Adapter):
     #
     #  KWH
     #
-    # called once an hour, and just after midnight it will also store 'energy' kwh values for all devices.
+    # called once an hour, and just after midnight it will also store 'energy' kwh values for all devices. 
+    # TODO: in the future the two methods could be combined (this one and the 'live' one above) to avoid duplication
     def get_energy_data(self, store_data):
         if self.DEBUG:
             print("in get_energy_data")
@@ -1298,6 +1313,8 @@ class EnergyUseAdapter(Adapter):
                     time.sleep(.5)
                     self.set_value_on_thing('today', 0) # reset today value to 0
                     self.persistent_data['previous_hour_day_delta'] = 0
+                    
+                    self.previous_combined_kwh_since_midnight = 0 # the kwh-consumption-since-mignight is only allowed to grow, the exception being midnight, when it's reset
                 
                     if self.persistent_data['previous_hour'] != 0:
                         if self.DEBUG:
