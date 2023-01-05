@@ -318,7 +318,7 @@
             
             // get wattage interval
             this.wattage_interval = setInterval(() =>{
-                //this.get_today();
+                this.get_today();
             },5000);
 		}   
 		
