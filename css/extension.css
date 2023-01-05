@@ -874,7 +874,7 @@ div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-num
 /* line with highlight area */
 .extension-energyuse-sparkline {
   stroke: white
-  fill: rgba(255, 255, 255, .3);
+  fill: rgba(255, 255, 255, 0);
 }
 
 /* change the spot color */
@@ -890,7 +890,7 @@ div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-num
 
 /* style fill area and line colors using specific class name */
 .extension-energyuse-sparkline--fill {
-  fill: rgba(255, 255, 255, .3);
+  fill: rgba(255, 255, 255, 0);
 }
 
 .extension-energyuse-sparkline--line {
@@ -1002,6 +1002,11 @@ div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-num
     
     .extension-energyuse-live-sparkline{
         display:inline;
+    }
+    
+    .extension-energyuse-wattage-and-kwh{
+        display:flex;
+        align-items:center;
     }
 }
 

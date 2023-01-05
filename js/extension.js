@@ -805,7 +805,7 @@
                         try{
                             let spark_el = document.createElement('svg');
                             spark_el.setAttribute('width','100');
-                            spark_el.setAttribute('height','20');
+                            spark_el.setAttribute('height','15');
                             spark_el.setAttribute('stroke-width','2');
                             spark_el.setAttribute('alt','Last 10 power measurements');
                             spark_el.setAttribute('title','Last 10 power measurements');

@@ -311,8 +311,8 @@ class EnergyUseAdapter(Adapter):
         """ Handles the various timers """
         
         if self.DEBUG:
-            print("CLOCK INIT.. sleeping 2 seconds first")
-        time.sleep(2)
+            print("CLOCK INIT.. sleeping 10 seconds first")
+        time.sleep(10)
         #time.sleep(initial_sleep)
         busy_counting = False
         clock_active = True
