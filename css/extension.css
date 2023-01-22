@@ -66,7 +66,7 @@
     display:block;
 }
 
-#extension-energyuse-view h3{
+#extension-energyuse-tabs-container h3{
     margin-top:6rem;
 }
 
@@ -863,6 +863,8 @@ div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-num
 .extension-energyuse-live-sparkline{
     display:none;
     margin:0 1rem;
+    position:relative;
+    top:3px;
 }
 
 /* just the line */

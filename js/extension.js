@@ -37,6 +37,7 @@
             this.live = null;
             this.live_array = [];
             this.busy_polling = false;
+            this.busy_polling_count = 0; // reset once every 10 attempts
             this.last_ten_measurements = {};
 
             setTimeout(() => {
@@ -356,10 +357,20 @@
         get_today(){
             
             if(this.busy_polling == true){
-                if(this.debug){
-                    console.warn("get_today: already busy polling. Aborting.");
+                
+                this.busy_polling_count++;
+                if(this.busy_polling_count < 10){
+                    if(this.debug){
+                        console.warn("get_today: already busy polling. Aborting.");
+                    }
+                    return;
                 }
-                return
+                else{
+                    if(this.debug){
+                        console.warn("resetting busy polling. Allowing poll.");
+                    }
+                    this.busy_polling_count = 0;
+                }
             }
             this.busy_polling = true;
             
@@ -1098,7 +1109,7 @@
                     // virtual item data
                     const virtual = this.persistent_data.virtual[id];
                     if(this.debug){
-                        console.log("enegy use: virtual: ", virtual);
+                        console.log("energy use: virtual: ", virtual);
                     }
                     if(typeof virtual['deleted_time'] != 'undefined'){
                         continue;
