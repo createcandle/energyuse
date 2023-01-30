@@ -6,7 +6,9 @@ It's designed with smart sockets with power monitoring functionality in mind. Fo
 
 You can learn how much electricity these devices use each day, and how much electricity is used in total.
 
-![Energy use overview](screenshot.jpg?raw=true "Energy use overview")
+![Energy use main page](screenshot.jpg?raw=true "Energy use main page")
+
+![Energy use overview](screenshot.ng?raw=true "Energy use overview")
 
 It also creates a thing with a few properties, such as:
 - Yesterday's total KWh consumed
