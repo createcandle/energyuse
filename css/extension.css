@@ -743,7 +743,16 @@ div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-num
     border-bottom:1px solid rgba(255,255,255,.05);
 }
 
-#extension-energyuse-today-details > div > span{
+.extension-energyuse-wattage-device-title{
+    display:inline-block;
+}
+.extension-energyuse-wattage-device-title::first-letter{
+    text-transform: uppercase;
+}
+
+/* #extension-energyuse-today-details > div > span */
+
+.extension-energyuse-wattage-and-kwh{
     display:flex;
 }
 
@@ -869,13 +878,13 @@ div:not(.extension-energyuse-grand-total-container) .extension-energyuse-big-num
 
 /* just the line */
 .extension-energyuse-sparkline {
-  stroke: white
+  stroke: white;
   fill: none;
 }
 
 /* line with highlight area */
 .extension-energyuse-sparkline {
-  stroke: white
+  stroke: white;
   fill: rgba(255, 255, 255, 0);
 }
 
