@@ -8,7 +8,7 @@ You can learn how much electricity these devices use each day, and how much elec
 
 ![Energy use main page](screenshot.jpg?raw=true "Energy use main page")
 
-![Energy use overview](screenshot.ng?raw=true "Energy use overview")
+![Energy use overview](screenshot.png?raw=true "Energy use overview")
 
 It also creates a thing with a few properties, such as:
 - Yesterday's total KWh consumed
